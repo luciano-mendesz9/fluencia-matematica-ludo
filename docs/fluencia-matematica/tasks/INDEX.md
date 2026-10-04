@@ -1,6 +1,7 @@
 # Índice ordenado de tarefas
 
-Todas estão **planejadas** em 04/10/2026. Branch base de integração: `main` local; remoto pendente.
+Estado em 04/10/2026: FM-001 está **verificada** em sua branch; as demais permanecem **planejadas**.
+Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |

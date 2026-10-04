@@ -1,6 +1,6 @@
 # FM-001 — Bootstrap executável e testável
 
-**Ordem/fase:** 1/Base | **Branch:** `task/FM-001-bootstrap` | **Situação:** planejada
+**Ordem/fase:** 1/Base | **Branch:** `task/FM-001-bootstrap` | **Situação:** verificada
 
 ## Objetivo e resultado observável
 
