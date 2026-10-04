@@ -1,6 +1,6 @@
 # FM-002 — Design system e shells compartilhados
 
-**Ordem/fase:** 2/Base | **Branch:** `task/FM-002-design-system` | **Situação:** planejada
+**Ordem/fase:** 2/Base | **Branch:** `task/FM-002-design-system` | **Situação:** verificada
 
 ## Objetivo, dependências e escopo
 

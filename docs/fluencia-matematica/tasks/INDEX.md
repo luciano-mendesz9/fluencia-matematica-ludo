@@ -1,7 +1,7 @@
 # Índice ordenado de tarefas
 
-Estado em 04/10/2026: FM-001 está **verificada** em sua branch; as demais permanecem **planejadas**.
-Branch base de integração: `main`, publicada em `origin/main`.
+Estado em 04/10/2026: FM-001 está **integrada** e FM-002 está **verificada** em sua branch; as
+demais permanecem **planejadas**. Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |

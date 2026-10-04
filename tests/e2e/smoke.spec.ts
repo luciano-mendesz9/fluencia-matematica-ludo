@@ -4,7 +4,7 @@ test("abre a página inicial da Fluência Matemática", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { level: 1, name: "Fluência Matemática" }),
+    page.getByRole("heading", { level: 1, name: /Matemática praticada/ }),
   ).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("base técnica");
+  await expect(page.getByRole("status")).toContainText(/base técnica/i);
 });
