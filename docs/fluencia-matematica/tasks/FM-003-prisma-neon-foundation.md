@@ -1,6 +1,6 @@
 # FM-003 — Fundação Prisma/Neon e migration mínima
 
-**Ordem/fase:** 3/Base | **Branch:** `task/FM-003-prisma-neon-foundation` | **Situação:** planejada
+**Ordem/fase:** 3/Base | **Branch:** `task/FM-003-prisma-neon-foundation` | **Situação:** bloqueada
 
 ## Objetivo e pré-condições
 

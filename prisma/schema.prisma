@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum GlobalRole {
+  SEMED_ADMIN
+  DEVELOPER
+}
+
+model User {
+  id              String       @id @default(uuid()) @db.Uuid
+  name            String       @db.VarChar(160)
+  email           String?      @db.VarChar(320)
+  normalizedEmail String?      @unique @db.VarChar(320)
+  studentCode     String?      @unique @db.VarChar(80)
+  passwordHash    String       @db.VarChar(255)
+  status          UserStatus   @default(ACTIVE)
+  globalRole      GlobalRole?
+  sessionVersion  Int          @default(1)
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
+  sessions        Session[]
+  auditEvents     AuditEvent[] @relation("AuditActor")
+
+  @@index([status])
+}
+
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.VarChar(128)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  lastSeenAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model AuditEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorId       String?  @db.Uuid
+  action        String   @db.VarChar(120)
+  targetType    String   @db.VarChar(120)
+  targetId      String?  @db.VarChar(160)
+  schoolId      String?  @db.Uuid
+  before        Json?    @db.JsonB
+  after         Json?    @db.JsonB
+  correlationId String   @db.VarChar(120)
+  at            DateTime @default(now()) @db.Timestamptz(3)
+  actor         User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, at])
+  @@index([targetType, targetId, at])
+  @@index([correlationId])
+}
