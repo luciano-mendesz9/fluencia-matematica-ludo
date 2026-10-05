@@ -1,6 +1,6 @@
 # FM-004 — Autenticação, credenciais e sessão
 
-**Ordem/fase:** 4/Base | **Branch:** `task/FM-004-authentication` | **Situação:** verificada
+**Ordem/fase:** 4/Base | **Branch:** `task/FM-004-authentication` | **Situação:** integrada
 
 ## Objetivo/dependências
 
