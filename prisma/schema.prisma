@@ -17,6 +17,22 @@ enum GlobalRole {
   DEVELOPER
 }
 
+enum SchoolStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SchoolMembershipRole {
+  COORDINATOR
+  TEACHER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  ENDED
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -31,8 +47,57 @@ model User {
   updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
   sessions        Session[]
   auditEvents     AuditEvent[] @relation("AuditActor")
+  passwordResets  PasswordReset[] @relation("PasswordResetUser")
+  requestedResets PasswordReset[] @relation("PasswordResetRequester")
+  schoolMemberships SchoolMembership[]
 
   @@index([status])
+}
+
+model School {
+  id            String             @id @default(uuid()) @db.Uuid
+  name          String             @db.VarChar(160)
+  externalCode  String?            @unique @db.VarChar(80)
+  status        SchoolStatus       @default(ACTIVE)
+  revision      Int                @default(1)
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @db.Timestamptz(3)
+  memberships   SchoolMembership[]
+
+  @@index([status, name])
+}
+
+model SchoolMembership {
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @db.Uuid
+  schoolId  String               @db.Uuid
+  role      SchoolMembershipRole
+  status    MembershipStatus     @default(ACTIVE)
+  startsAt  DateTime             @default(now()) @db.Timestamptz(3)
+  endsAt    DateTime?            @db.Timestamptz(3)
+  revision  Int                  @default(1)
+  createdAt DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime             @updatedAt @db.Timestamptz(3)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    School               @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, startsAt, endsAt])
+  @@index([schoolId, role, status])
+}
+
+model PasswordReset {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  tokenHash     String    @unique @db.Char(64)
+  expiresAt     DateTime  @db.Timestamptz(3)
+  usedAt        DateTime? @db.Timestamptz(3)
+  requestedById String?   @db.Uuid
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  user          User      @relation("PasswordResetUser", fields: [userId], references: [id], onDelete: Cascade)
+  requestedBy   User?     @relation("PasswordResetRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, expiresAt])
+  @@index([requestedById, createdAt])
 }
 
 model Session {

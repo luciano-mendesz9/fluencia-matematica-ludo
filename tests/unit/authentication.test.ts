@@ -14,7 +14,7 @@ describe("authentication primitives", () => {
     expect(destinationForUser({ studentCode: "A1", globalRole: null })).toBe("/aluno");
     expect(destinationForUser({ studentCode: null, globalRole: "SEMED_ADMIN" })).toBe("/admin");
     expect(destinationForUser({ studentCode: null, globalRole: "DEVELOPER" })).toBe("/operacao");
-    expect(destinationForUser({ studentCode: null, globalRole: null })).toBe("/professor");
+    expect(destinationForUser({ studentCode: null, globalRole: null })).toBe("/selecionar-escola");
   });
 
   it("signs and verifies JWT claims and rejects a tampered token", async () => {

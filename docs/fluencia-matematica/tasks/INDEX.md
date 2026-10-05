@@ -1,8 +1,9 @@
 # Índice ordenado de tarefas
 
-Estado em 04/10/2026: FM-001, FM-002, FM-003 e FM-004 estão **integradas**; FM-003/004 foram
-verificadas com Neon de desenvolvimento. As demais permanecem **planejadas**. Branch base de
-integração: `main`, publicada em `origin/main`.
+Estado em 05/10/2026: FM-001, FM-002, FM-003 e FM-004 estão **integradas**; FM-003/004 foram
+verificadas com Neon de desenvolvimento. FM-005 e FM-006 estão **verificadas na branch combinada**,
+ainda não integradas; FM-007–027 permanecem **planejadas**. Branch base de integração: `main`,
+publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |
@@ -10,8 +11,8 @@ integração: `main`, publicada em `origin/main`.
 | 2 | [FM-002](FM-002-design-system.md) | Base: design system/shell | 001 | `task/FM-002-design-system` | branco/azul, 320–desktop |
 | 3 | [FM-003](FM-003-prisma-neon-foundation.md) | Base: Prisma/Neon/migration mínima | 001 | `task/FM-003-prisma-neon-foundation` | banco isolado, client único |
 | 4 | [FM-004](FM-004-authentication.md) | Base: login/sessão | 002,003 | `task/FM-004-authentication` | aluno/adulto, sessão segura |
-| 5 | [FM-005](FM-005-authorization-recovery.md) | Base: políticas/revogação/reset | 004 | `task/FM-005-authorization-recovery` | autorização reutilizável |
-| 6 | [FM-006](FM-006-schools-memberships-context.md) | Escola: vínculos e seletor | 005 | `task/FM-006-schools-memberships-context` | múltiplas escolas sem elevação |
+| 5 | [FM-005](FM-005-authorization-recovery.md) | Base: políticas/revogação/reset | 004 | `task/FM-005-FM-006-authorization-schools-context` | autorização reutilizável |
+| 6 | [FM-006](FM-006-schools-memberships-context.md) | Escola: vínculos e seletor | 005 | `task/FM-005-FM-006-authorization-schools-context` | múltiplas escolas sem elevação |
 | 7 | [FM-007](FM-007-academic-years-classes.md) | Escola: ano/turmas | 006 | `task/FM-007-academic-years-classes` | CRUD escopado individual |
 | 8 | [FM-008](FM-008-students-enrollments.md) | Escola: alunos/matrículas | 007 | `task/FM-008-students-enrollments` | código único e histórico |
 | 9 | [FM-009](FM-009-teachers-assignments.md) | Escola: adultos/docência | 007 | `task/FM-009-teachers-assignments` | papéis e turmas vigentes |

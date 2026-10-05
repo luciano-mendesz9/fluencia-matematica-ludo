@@ -8,11 +8,12 @@ type AppShellProps = {
   currentUserLabel: string;
   navigation: NavigationItem[];
   accountAction?: ReactNode;
+  contextAction?: ReactNode;
   statusLabel?: string;
   children: ReactNode;
 };
 
-export function AppShell({ areaLabel, currentUserLabel, navigation, accountAction, statusLabel = "Estrutura", children }: AppShellProps) {
+export function AppShell({ areaLabel, currentUserLabel, navigation, accountAction, contextAction, statusLabel = "Estrutura", children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background">
       <header className="relative border-b border-border bg-surface">
@@ -24,6 +25,7 @@ export function AppShell({ areaLabel, currentUserLabel, navigation, accountActio
             <span className="hidden min-[360px]:inline-flex"><Badge variant="info">{areaLabel}</Badge></span>
           </div>
           <div className="hidden items-center gap-3 text-sm text-muted sm:flex">
+            {contextAction}
             <span>{currentUserLabel}</span>
             <Badge>{statusLabel}</Badge>
             {accountAction}
@@ -49,6 +51,7 @@ export function AppShell({ areaLabel, currentUserLabel, navigation, accountActio
 
         <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8">
           {accountAction ? <div className="mb-5 flex items-center justify-between gap-3 sm:hidden"><span className="truncate text-sm text-muted">{currentUserLabel}</span>{accountAction}</div> : null}
+          {contextAction ? <div className="mb-5 sm:hidden">{contextAction}</div> : null}
           <nav aria-label="Trilha de navegação" className="mb-6 text-sm text-muted">
             <ol className="flex flex-wrap items-center gap-2">
               <li><Link href="/" className="hover:text-brand">Início</Link></li>

@@ -3,7 +3,11 @@ import { StructurePanel } from "@/src/components/layout/structure-panel";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { requireArea } from "@/src/server/auth/guard";
 
-const navigation = [{ href: "/admin", label: "Visão geral" }];
+const navigation = [
+  { href: "/admin", label: "Visão geral" },
+  { href: "/admin/escolas", label: "Escolas" },
+  { href: "/admin/redefinir-senha-aluno", label: "Redefinir senha de aluno" },
+];
 
 export default async function AdminPage() {
   const session = await requireArea("admin");
