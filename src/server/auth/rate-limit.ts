@@ -1,11 +1,13 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import { Prisma } from "@/src/generated/prisma/client";
 import { prisma } from "@/src/lib/prisma";
 
 const WINDOW_MS = 15 * 60 * 1000;
 const BLOCK_MS = 15 * 60 * 1000;
 const MAX_FAILURES = 5;
+const MAX_TRANSACTION_ATTEMPTS = 3;
 
 function isRetryable(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2034";
@@ -18,37 +20,55 @@ export async function isRateLimited(keyHashes: string[], now = new Date()) {
   }));
 }
 
-export async function recordLoginFailure(keyHashes: string[], now = new Date()) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+export async function recordRateLimitHit(keyHashes: string[], now = new Date()) {
+  const nowIso = now.toISOString();
+  const windowStartIso = new Date(now.getTime() - WINDOW_MS).toISOString();
+  const blockedUntilIso = new Date(now.getTime() + BLOCK_MS).toISOString();
+
+  for (let attempt = 0; attempt < MAX_TRANSACTION_ATTEMPTS; attempt += 1) {
     try {
       return await prisma.$transaction(async (transaction) => {
         let limited = false;
         for (const keyHash of keyHashes) {
-          const existing = await transaction.loginThrottle.findUnique({ where: { keyHash } });
-          const withinWindow = existing && existing.updatedAt.getTime() >= now.getTime() - WINDOW_MS;
-          const failureCount = withinWindow ? existing.failureCount + 1 : 1;
-          const blockedUntil = failureCount >= MAX_FAILURES ? new Date(now.getTime() + BLOCK_MS) : null;
-          if (blockedUntil) limited = true;
-
-          await transaction.loginThrottle.upsert({
-            where: { keyHash },
-            create: { keyHash, failureCount, blockedUntil, firstFailedAt: now, updatedAt: now },
-            update: {
-              failureCount,
-              blockedUntil,
-              firstFailedAt: withinWindow ? existing.firstFailedAt : now,
-              updatedAt: now,
-            },
-          });
+          const rows = await transaction.$queryRaw<Array<{ limited: boolean }>>(Prisma.sql`
+            INSERT INTO "LoginThrottle" ("id", "keyHash", "failureCount", "blockedUntil", "firstFailedAt", "updatedAt")
+            VALUES (${randomUUID()}::uuid, ${keyHash}, 1, NULL::timestamptz, ${nowIso}::timestamptz, ${nowIso}::timestamptz)
+            ON CONFLICT ("keyHash") DO UPDATE SET
+              "failureCount" = CASE
+                WHEN "LoginThrottle"."updatedAt" >= ${windowStartIso}::timestamptz
+                  THEN "LoginThrottle"."failureCount" + 1
+                ELSE 1
+              END,
+              "blockedUntil" = CASE
+                WHEN (CASE
+                  WHEN "LoginThrottle"."updatedAt" >= ${windowStartIso}::timestamptz
+                    THEN "LoginThrottle"."failureCount" + 1
+                  ELSE 1
+                END) >= ${MAX_FAILURES}
+                  THEN ${blockedUntilIso}::timestamptz
+                ELSE NULL::timestamptz
+              END,
+              "firstFailedAt" = CASE
+                WHEN "LoginThrottle"."updatedAt" >= ${windowStartIso}::timestamptz
+                  THEN "LoginThrottle"."firstFailedAt"
+                ELSE ${nowIso}::timestamptz
+              END,
+              "updatedAt" = ${nowIso}::timestamptz
+            RETURNING "blockedUntil" IS NOT NULL AND "blockedUntil" > ${nowIso}::timestamptz AS "limited"
+          `);
+          if (rows[0]?.limited) limited = true;
         }
         return limited;
-      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
     } catch (error) {
-      if (!isRetryable(error) || attempt === 2) throw error;
+      if (!isRetryable(error) || attempt === MAX_TRANSACTION_ATTEMPTS - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, (attempt + 1) * 10));
     }
   }
   return false;
 }
+
+export const recordLoginFailure = recordRateLimitHit;
 
 export function clearIdentifierThrottle(keyHash: string) {
   return prisma.loginThrottle.deleteMany({ where: { keyHash } });

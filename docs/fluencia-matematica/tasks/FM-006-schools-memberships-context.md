@@ -1,6 +1,6 @@
 # FM-006 — Escolas, vínculos e contexto escolhido
 
-**Ordem/fase:** 6/Escola | **Branch:** `task/FM-006-schools-memberships-context` | **Situação:** planejada
+**Ordem/fase:** 6/Escola | **Branch:** `task/FM-005-FM-006-authorization-schools-context` | **Situação:** verificada na branch
 
 ## Objetivo/dependências
 

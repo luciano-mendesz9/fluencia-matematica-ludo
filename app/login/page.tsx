@@ -16,6 +16,7 @@ export default async function LoginPage() {
         <h1 id="login-title" className="mt-2 text-3xl font-bold tracking-tight text-foreground">Entrar na Fluência Matemática</h1>
         <p className="mt-3 leading-7 text-muted">Adultos usam o e-mail institucional. Alunos usam o código individual.</p>
         <LoginForm requestId={randomUUID()} />
+        <Link href="/recuperar-acesso" className="mt-6 inline-block font-semibold text-brand hover:text-brand-hover">Esqueci minha senha</Link>
       </section>
     </main>
   );

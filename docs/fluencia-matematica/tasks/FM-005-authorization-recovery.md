@@ -1,6 +1,6 @@
 # FM-005 — Políticas de autorização e recuperação
 
-**Ordem/fase:** 5/Base | **Branch:** `task/FM-005-authorization-recovery` | **Situação:** planejada
+**Ordem/fase:** 5/Base | **Branch:** `task/FM-005-FM-006-authorization-schools-context` | **Situação:** verificada na branch
 
 ## Objetivo/escopo
 
