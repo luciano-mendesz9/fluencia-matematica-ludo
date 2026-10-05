@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { loginAsAdult, loginAsStudent } from "./auth-helpers";
 
 test("modal recebe foco, fecha por teclado e devolve o foco", async ({ page }) => {
   await page.goto("/");
@@ -17,7 +18,7 @@ test("modal recebe foco, fecha por teclado e devolve o foco", async ({ page }) =
 for (const width of [320, 390]) {
   test(`shell móvel funciona sem overflow em ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 760 });
-    await page.goto("/aluno");
+    await loginAsStudent(page);
     await expect(page.getByRole("heading", { name: "Área do aluno" })).toBeVisible();
     const menu = page.getByRole("button", { name: "Menu" });
     await expect(menu).toHaveAttribute("aria-expanded", "false");
@@ -30,7 +31,7 @@ for (const width of [320, 390]) {
 
 test("shell desktop apresenta navegação e trilha estruturais", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/admin");
+  await loginAsAdult(page);
   await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Trilha de navegação" })).toContainText("Administração");
   await expect(page.getByText("Área preparada, sem dados simulados")).toBeVisible();

@@ -16,5 +16,6 @@ export default defineConfig({
     passWithNoTests: false,
     setupFiles: ["dotenv/config"],
     testTimeout: 30_000,
+    fileParallelism: false,
   },
 });

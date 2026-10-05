@@ -60,8 +60,8 @@ describe.sequential("PostgreSQL foundation", () => {
         tokenHash,
         expiresAt: new Date(Date.now() + 60_000),
       };
-      await transaction.session.create({ data: session });
-      await transaction.session.create({ data: session });
+      await transaction.session.create({ data: { ...session, requestId: randomUUID() } });
+      await transaction.session.create({ data: { ...session, requestId: randomUUID() } });
     })).rejects.toMatchObject({ code: "P2002" });
 
     await expect(prisma.user.count({ where: { studentCode } })).resolves.toBe(0);

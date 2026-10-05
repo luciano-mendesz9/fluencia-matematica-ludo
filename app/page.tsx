@@ -17,6 +17,7 @@ export default function Home() {
             Fluência <span className="text-brand">Matemática</span>
           </Link>
           <Badge variant="info">MVP em construção</Badge>
+          <Link href="/login" className="inline-flex min-h-11 items-center rounded-control border border-brand px-4 font-semibold text-brand hover:bg-blue-50">Entrar</Link>
         </div>
       </header>
 

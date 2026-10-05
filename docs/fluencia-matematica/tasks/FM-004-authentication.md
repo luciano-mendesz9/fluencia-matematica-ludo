@@ -1,11 +1,11 @@
 # FM-004 — Autenticação, credenciais e sessão
 
-**Ordem/fase:** 4/Base | **Branch:** `task/FM-004-authentication` | **Situação:** planejada
+**Ordem/fase:** 4/Base | **Branch:** `task/FM-004-authentication` | **Situação:** verificada
 
 ## Objetivo/dependências
 
-Após FM-002/003, implementar login de adulto por e-mail e aluno por código, hash Argon2id, sessão
-opaca em cookie e logout/revogação. Resultado: `/login` real direciona ao fluxo autorizado. Regras
+Após FM-002/003, implementar login de adulto por e-mail e aluno por código, hash bcrypt e JWT
+assinado em cookie com sessão revogável no banco, além de logout. Resultado: `/login` real direciona ao fluxo autorizado. Regras
 BR-001/003; [segurança](../03-server-security.md); ADR-004.
 
 ## Dados, rotas e contratos

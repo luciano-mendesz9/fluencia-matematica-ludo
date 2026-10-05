@@ -46,8 +46,8 @@ e de vínculos atuais. Cache privado deve incorporar usuário e escopo ou ser ev
 
 ## Bibliotecas propostas
 
-Prisma 7 + adapter Neon (dados); Zod 4 (entrada/saída); Argon2id (hash); biblioteca de sessão
-avaliada em ADR-004; date-fns/tz ou Temporal disponível para mês municipal; Playwright (E2E), Vitest
+Prisma 7 + adapter Neon (dados); Zod 4 (entrada/saída); bcrypt (hash); JWT HS256 em cookie com
+sessão revogável no banco conforme ADR-004; date-fns/tz ou Temporal disponível para mês municipal; Playwright (E2E), Vitest
 (unidade), Testing Library (componentes quando útil), axe-core (auditoria), ExcelJS (XLSX com
 neutralização de fórmula) e React-pdf ou renderer server-side avaliado para PDF. Dependências de
 e-mail, TTS e mídia permanecem abertas e atrás de interfaces.

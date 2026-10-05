@@ -7,10 +7,12 @@ type AppShellProps = {
   areaLabel: string;
   currentUserLabel: string;
   navigation: NavigationItem[];
+  accountAction?: ReactNode;
+  statusLabel?: string;
   children: ReactNode;
 };
 
-export function AppShell({ areaLabel, currentUserLabel, navigation, children }: AppShellProps) {
+export function AppShell({ areaLabel, currentUserLabel, navigation, accountAction, statusLabel = "Estrutura", children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background">
       <header className="relative border-b border-border bg-surface">
@@ -23,7 +25,8 @@ export function AppShell({ areaLabel, currentUserLabel, navigation, children }: 
           </div>
           <div className="hidden items-center gap-3 text-sm text-muted sm:flex">
             <span>{currentUserLabel}</span>
-            <Badge>Estrutura</Badge>
+            <Badge>{statusLabel}</Badge>
+            {accountAction}
           </div>
           <MobileNavigation items={navigation} />
         </div>
@@ -45,6 +48,7 @@ export function AppShell({ areaLabel, currentUserLabel, navigation, children }: 
         </aside>
 
         <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-8">
+          {accountAction ? <div className="mb-5 flex items-center justify-between gap-3 sm:hidden"><span className="truncate text-sm text-muted">{currentUserLabel}</span>{accountAction}</div> : null}
           <nav aria-label="Trilha de navegação" className="mb-6 text-sm text-muted">
             <ol className="flex flex-wrap items-center gap-2">
               <li><Link href="/" className="hover:text-brand">Início</Link></li>

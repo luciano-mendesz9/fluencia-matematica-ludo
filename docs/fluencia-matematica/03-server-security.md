@@ -32,7 +32,8 @@ do cliente nunca comprovam autoridade.
 - Cookie `HttpOnly`, `Secure`, `SameSite=Lax/Strict` conforme fluxo; rotação, expiração e revogação
   por `sessionVersion`. CSRF: proteção de origem do Next em Actions mais token/origin explícito para
   rotas que precisem; nenhuma mutação via GET.
-- Argon2id com parâmetros medidos; token de reset aleatório, hash no banco, uso único e expiração.
+- Bcrypt com custo configurável e validado; JWT assinado, com hash e estado revogável no banco;
+  token de reset aleatório, hash no banco, uso único e expiração.
 - Rate limit por conta/IP com armazenamento compartilhado antes do piloto; não registrar senha/token.
 - Upload: allowlist MIME real/assinatura, tamanho, dimensão, antivírus quando aplicável, nome gerado,
   bucket privado e URL temporária; SVG/HTML não confiável não é servido inline.

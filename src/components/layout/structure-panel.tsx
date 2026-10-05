@@ -9,7 +9,7 @@ export function StructurePanel({ title, description }: { title: string; descript
       <p className="mt-4 max-w-2xl text-lg leading-8 text-muted">{description}</p>
       <div className="mt-8">
         <Feedback title="Área preparada, sem dados simulados" variant="info">
-          Este endereço valida a estrutura responsiva e acessível. Autenticação, autorização e dados reais serão conectados nas tarefas próprias antes de qualquer operação privada.
+          Este endereço valida a estrutura responsiva, acessível e autenticada. Autorizações por vínculo e dados reais serão conectadas nas tarefas próprias antes de qualquer operação privada.
         </Feedback>
       </div>
     </section>

@@ -38,6 +38,7 @@ model User {
 model Session {
   id         String    @id @default(uuid()) @db.Uuid
   userId     String    @db.Uuid
+  requestId  String    @unique @db.Uuid
   tokenHash  String    @unique @db.VarChar(128)
   expiresAt  DateTime  @db.Timestamptz(3)
   revokedAt  DateTime? @db.Timestamptz(3)
@@ -46,6 +47,17 @@ model Session {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+}
+
+model LoginThrottle {
+  id           String    @id @default(uuid()) @db.Uuid
+  keyHash      String    @unique @db.Char(64)
+  failureCount Int       @default(0)
+  blockedUntil DateTime? @db.Timestamptz(3)
+  firstFailedAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([blockedUntil])
 }
 
 model AuditEvent {

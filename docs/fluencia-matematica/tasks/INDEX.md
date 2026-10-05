@@ -1,8 +1,8 @@
 # Índice ordenado de tarefas
 
-Estado em 04/10/2026: FM-001, FM-002 e FM-003 estão **integradas**; FM-003 foi verificada com Neon
-de desenvolvimento. As demais permanecem **planejadas**. Branch base de integração: `main`, publicada
-em `origin/main`.
+Estado em 04/10/2026: FM-001, FM-002 e FM-003 estão **integradas**; FM-004 está **verificada** na
+branch da tarefa com Neon de desenvolvimento. As demais permanecem **planejadas**. Branch base de
+integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |
