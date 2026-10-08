@@ -21,9 +21,10 @@ test("SEMED cadastra escola, cria vínculo individual e o professor acessa o con
   const createdCard = schoolCard(page, authFixtures.schools.created.name);
   await expect(createdCard).toBeVisible();
   await createdCard.getByRole("link", { name: "Gerenciar" }).click();
-  await page.getByLabel("E-mail da conta adulta").fill(authFixtures.schools.linkCandidate.email);
-  await page.getByRole("button", { name: "Criar vínculo" }).click();
-  await expect(page.locator("p[role=status]")).toHaveText("Vínculo criado.");
+  await page.getByRole("link", { name: "Gerenciar pessoas" }).click();
+  await page.getByLabel("E-mail da conta existente").fill(authFixtures.schools.linkCandidate.email);
+  await page.getByRole("button", { name: "Vincular conta existente" }).click();
+  await expect(page.locator("p[role=status]")).toHaveText("Conta existente vinculada à escola.");
 
   await page.getByRole("button", { name: "Sair" }).click();
   await login(page, authFixtures.schools.linkCandidate.email);
@@ -101,9 +102,11 @@ test("revogação passa a valer no próximo request e remove a escola disponíve
   await expect(adminPage).toHaveURL(/\/admin$/);
   await adminPage.goto("/admin/escolas");
   await schoolCard(adminPage, authFixtures.schools.schoolB.name).getByRole("link", { name: "Gerenciar" }).click();
+  await adminPage.getByRole("link", { name: "Gerenciar pessoas" }).click();
   const teacherMembership = adminPage.getByRole("listitem").filter({ hasText: authFixtures.schools.teacherOne.name });
+  await teacherMembership.getByLabel("Confirmo a suspensão e o encerramento das atribuições ativas.").check();
   await teacherMembership.getByRole("button", { name: "Suspender vínculo" }).click();
-  await expect(adminPage.getByRole("listitem").filter({ hasText: authFixtures.schools.teacherOne.name })).toContainText("Suspenso");
+  await expect(adminPage.getByRole("listitem").filter({ hasText: authFixtures.schools.teacherOne.name })).toContainText("vínculo encerrado");
 
   await teacherPage.goto("/professor");
   await expect(teacherPage).toHaveURL(/\/selecionar-escola$/);
