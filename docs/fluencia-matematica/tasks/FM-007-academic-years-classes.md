@@ -1,6 +1,6 @@
 # FM-007 — Anos letivos e turmas
 
-**Ordem/fase:** 7/Escola | **Branch:** `task/FM-007-academic-years-classes` | **Situação:** implementada e publicada na branch encadeada; validação PostgreSQL/Playwright pendente
+**Ordem/fase:** 7/Escola | **Branch:** `task/FM-007-academic-years-classes` | **Situação:** integrada e verificada com PostgreSQL/Chromium em 08/10/2026
 
 ## Objetivo e escopo
 

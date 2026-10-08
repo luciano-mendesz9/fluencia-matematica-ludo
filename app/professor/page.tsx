@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/src/components/layout/app-shell";
 import { StructurePanel } from "@/src/components/layout/structure-panel";
 import { LogoutForm } from "@/src/features/auth/logout-form";
@@ -5,7 +6,10 @@ import { SchoolSwitcher } from "@/src/features/schools/school-forms";
 import { requireArea } from "@/src/server/auth/guard";
 import { listAvailableSchools } from "@/src/server/schools/service";
 
-const navigation = [{ href: "/professor", label: "Visão geral" }];
+const navigation = [
+  { href: "/professor", label: "Visão geral" },
+  { href: "/professor/turmas", label: "Minhas turmas" },
+];
 
 export default async function ProfessorPage() {
   const session = await requireArea("professor");
@@ -18,4 +22,3 @@ export default async function ProfessorPage() {
     </AppShell>
   );
 }
-import { redirect } from "next/navigation";

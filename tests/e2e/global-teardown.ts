@@ -12,14 +12,17 @@ export default async function globalTeardown() {
       authFixtures.schools.coordinator.email,
       authFixtures.schools.linkCandidate.email,
       authFixtures.schools.noMembership.email,
+      authFixtures.schools.multiTeacher.email,
     ];
+    const taskEmails = [authFixtures.people.newTeacher.email, authFixtures.people.globalDeveloper.email];
+    const cleanupEmails = [...schoolEmails, ...taskEmails];
     const schoolCodes = [
       authFixtures.schools.schoolA.code,
       authFixtures.schools.schoolB.code,
       authFixtures.schools.schoolC.code,
       authFixtures.schools.created.code,
     ];
-    const schoolUsers = await pool.query('SELECT "id" FROM "User" WHERE "normalizedEmail" = ANY($1::text[]) OR "name" = $2', [schoolEmails, authFixtures.students.name]);
+    const schoolUsers = await pool.query('SELECT "id" FROM "User" WHERE "normalizedEmail" = ANY($1::text[]) OR "name" = $2', [cleanupEmails, authFixtures.students.name]);
     const schools = await pool.query('SELECT "id" FROM "School" WHERE "externalCode" = ANY($1::text[])', [schoolCodes]);
     const schoolUserIds = schoolUsers.rows.map((row) => row.id);
     const schoolIds = schools.rows.map((row) => row.id);
@@ -32,6 +35,7 @@ export default async function globalTeardown() {
     await pool.query('DELETE FROM "Session" WHERE "userId" = ANY($1::uuid[])', [schoolUserIds]);
     await pool.query('DELETE FROM "PasswordReset" WHERE "userId" = ANY($1::uuid[])', [schoolUserIds]);
     await pool.query('DELETE FROM "Enrollment" WHERE "studentId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);
+    await pool.query('DELETE FROM "TeacherClassAssignment" WHERE "teacherId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);
     await pool.query('DELETE FROM "ClassGroup" WHERE "schoolId" = ANY($1::uuid[])', [schoolIds]);
     await pool.query('DELETE FROM "AcademicYear" WHERE "schoolId" = ANY($1::uuid[])', [schoolIds]);
     await pool.query('DELETE FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);
@@ -47,7 +51,7 @@ export default async function globalTeardown() {
       authFixtures.recovery.adminEmail,
       authFixtures.recovery.requestEmail,
       authFixtures.recovery.resetEmail,
-      ...schoolEmails,
+      ...cleanupEmails,
     ], [authFixtures.student.identifier, authFixtures.recovery.studentCode]]);
     const fixtureUserIds = fixtureUsers.rows.map((row) => row.id);
     await pool.query(
@@ -62,6 +66,7 @@ export default async function globalTeardown() {
         authFixtures.recovery.adminEmail,
         authFixtures.recovery.requestEmail,
         authFixtures.recovery.resetEmail,
+        ...taskEmails,
       ], [authFixtures.student.identifier, authFixtures.recovery.studentCode]],
     );
     await pool.query("DELETE FROM \"LoginThrottle\" WHERE \"keyHash\" = ANY($1::text[])", [[

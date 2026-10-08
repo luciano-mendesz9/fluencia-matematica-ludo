@@ -178,16 +178,17 @@ export async function updateSchool(input: {
   });
   if (!before) throw new AuthorizationError("NOT_FOUND", "Escola não encontrada.");
   if (input.status === "INACTIVE") {
-    const [activeMemberships, activeAcademicYears, activeClasses, activeEnrollments] = await Promise.all([
+    const [activeMemberships, activeAcademicYears, activeClasses, activeEnrollments, activeTeacherAssignments] = await Promise.all([
       prisma.schoolMembership.count({
         where: { schoolId: input.schoolId, status: "ACTIVE", OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
       }),
       prisma.academicYear.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
       prisma.classGroup.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
       prisma.enrollment.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
+      prisma.teacherClassAssignment.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
     ]);
-    if (activeMemberships > 0 || activeAcademicYears > 0 || activeClasses > 0 || activeEnrollments > 0) {
-      throw new AuthorizationError("STATE_CONFLICT", "Encerre vínculos, anos letivos, turmas e matrículas ativos antes de inativar a escola.");
+    if (activeMemberships > 0 || activeAcademicYears > 0 || activeClasses > 0 || activeEnrollments > 0 || activeTeacherAssignments > 0) {
+      throw new AuthorizationError("STATE_CONFLICT", "Encerre vínculos, anos letivos, turmas, matrículas e atribuições docentes antes de inativar a escola.");
     }
   }
   try {
@@ -276,16 +277,34 @@ export async function suspendSchoolMembership(input: {
   assertGlobalRole(input.actor, ["SEMED_ADMIN"]);
   const before = await prisma.schoolMembership.findUnique({
     where: { id: input.membershipId },
-    select: { id: true, userId: true, schoolId: true, role: true, status: true, revision: true },
+    select: { id: true, userId: true, schoolId: true, role: true, status: true, startsAt: true, revision: true },
   });
   if (!before) throw new AuthorizationError("NOT_FOUND", "Vínculo não encontrado.");
   const now = new Date();
   return prisma.$transaction(async (transaction) => {
     const changed = await transaction.schoolMembership.updateMany({
       where: { id: input.membershipId, revision: input.revision, status: "ACTIVE" },
-      data: { status: "SUSPENDED", endsAt: now, revision: { increment: 1 } },
+      data: {
+        status: "SUSPENDED",
+        endsAt: now > before.startsAt ? now : new Date(before.startsAt.getTime() + 1),
+        revision: { increment: 1 },
+      },
     });
     if (changed.count !== 1) throw new AuthorizationError("STATE_CONFLICT", "O vínculo já foi alterado.");
+    const assignments = await transaction.teacherClassAssignment.findMany({
+      where: { membershipId: before.id, status: "ACTIVE" },
+      select: { id: true, startsAt: true },
+    });
+    for (const assignment of assignments) {
+      await transaction.teacherClassAssignment.update({
+        where: { id: assignment.id },
+        data: {
+          status: "ENDED",
+          endsAt: now > assignment.startsAt ? now : new Date(assignment.startsAt.getTime() + 1),
+          revision: { increment: 1 },
+        },
+      });
+    }
     const after = await transaction.schoolMembership.findUniqueOrThrow({
       where: { id: input.membershipId },
       select: { id: true, userId: true, schoolId: true, role: true, status: true, revision: true, endsAt: true },
@@ -299,7 +318,7 @@ export async function suspendSchoolMembership(input: {
         schoolId: after.schoolId,
         correlationId: input.correlationId ?? randomUUID(),
         before,
-        after: { ...after, endsAt: after.endsAt?.toISOString() },
+        after: { ...after, endsAt: after.endsAt?.toISOString(), endedAssignments: assignments.length },
       },
     });
     return after;

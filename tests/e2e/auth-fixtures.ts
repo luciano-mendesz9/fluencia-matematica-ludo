@@ -30,6 +30,7 @@ export const authFixtures = {
     coordinator: { email: "fm006.coordenador@example.invalid", name: "Coordenador FM-006" },
     linkCandidate: { email: "fm006.vinculo@example.invalid", name: "Professor para Vínculo" },
     noMembership: { email: "fm006.sem-escola@example.invalid", name: "Adulto sem Escola" },
+    multiTeacher: { email: "fm009.multiescola@example.invalid", name: "Professor FM-009 Multi Escola" },
     schoolA: { name: "Escola Azul E2E", code: "E2E-FM006-A" },
     schoolB: { name: "Escola Branca E2E", code: "E2E-FM006-B" },
     schoolC: { name: "Escola Celeste E2E", code: "E2E-FM006-C" },
@@ -47,5 +48,12 @@ export const authFixtures = {
     classB: "Turma FM-008 Branca",
     temporaryPassword: "Senha-Aluno-FM008-2026",
     newPassword: "Nova-Senha-FM008-2026",
+  },
+  people: {
+    year: 2095,
+    classA: "Turma FM-009 Azul",
+    classB: "Turma FM-009 Branca",
+    newTeacher: { email: "fm009.novo-professor@example.invalid", name: "Professor FM-009 Novo", password: "Senha-Professor-FM009-2026" },
+    globalDeveloper: { email: "fm009.desenvolvedor@example.invalid", name: "Desenvolvedor FM-009", password: "Senha-Developer-FM009-2026" },
   },
 } as const;

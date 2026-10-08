@@ -304,11 +304,12 @@ export async function updateClassGroup(input: {
         throw new AuthorizationError("STATE_CONFLICT", "Uma turma ativa precisa pertencer a um ano letivo ativo.");
       }
       if (input.status === "INACTIVE") {
-        const activeEnrollments = await transaction.enrollment.count({
-          where: { classId: before.id, schoolId: input.schoolId, status: "ACTIVE" },
-        });
-        if (activeEnrollments > 0) {
-          throw new AuthorizationError("STATE_CONFLICT", "Encerre ou transfira as matrículas ativas antes de inativar a turma.");
+        const [activeEnrollments, activeAssignments] = await Promise.all([
+          transaction.enrollment.count({ where: { classId: before.id, schoolId: input.schoolId, status: "ACTIVE" } }),
+          transaction.teacherClassAssignment.count({ where: { classId: before.id, schoolId: input.schoolId, status: "ACTIVE" } }),
+        ]);
+        if (activeEnrollments > 0 || activeAssignments > 0) {
+          throw new AuthorizationError("STATE_CONFLICT", "Encerre ou transfira as matrículas e encerre as atribuições docentes ativas antes de inativar a turma.");
         }
       }
       const changed = await transaction.classGroup.updateMany({

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { AuthorizationError } from "@/src/server/auth/errors";
 import { requireUser } from "@/src/server/auth/policies";
 import {
@@ -70,6 +70,7 @@ export async function updateAcademicYearAction(
     const actor = await requireUser();
     await updateAcademicYear({ actor, ...parsed.data });
     revalidateAcademicPaths(parsed.data.schoolId, undefined, parsed.data.academicYearId);
+    refresh();
     return { status: "success", message: "Ano letivo atualizado." };
   } catch (error) {
     return { status: "error", message: publicError(error, "Não foi possível atualizar o ano letivo.") };
@@ -115,6 +116,7 @@ export async function updateClassGroupAction(
     const actor = await requireUser();
     await updateClassGroup({ actor, ...parsed.data });
     revalidateAcademicPaths(parsed.data.schoolId, parsed.data.classGroupId, parsed.data.academicYearId);
+    refresh();
     return { status: "success", message: "Turma atualizada." };
   } catch (error) {
     return { status: "error", message: publicError(error, "Não foi possível atualizar a turma.") };

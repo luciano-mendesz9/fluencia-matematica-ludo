@@ -1,9 +1,9 @@
 # Índice ordenado de tarefas
 
-Estado em 07/10/2026: FM-001–FM-007 estão **integradas** em `origin/main@1084c17`; FM-003–006
-foram verificadas com Neon de desenvolvimento, enquanto a validação PostgreSQL/Playwright da FM-007
-permanece pendente. FM-008 está **implementada e publicada** na branch da tarefa, com migration e
-testes PostgreSQL/Playwright preparados, mas ainda não executados; FM-009–027 permanecem
+Estado em 08/10/2026: FM-001–FM-007 e FM-009 estão **integradas** em `origin/main@855a05d`; FM-003–006
+foram verificadas com Neon de desenvolvimento, enquanto a validação PostgreSQL/Playwright das
+FM-007 e FM-009 permanece pendente. FM-008 está **implementada e publicada** na branch da tarefa,
+em reconciliação com a FM-009 integrada; FM-010–027 permanecem
 **planejadas**. Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |

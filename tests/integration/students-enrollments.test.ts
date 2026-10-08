@@ -119,7 +119,7 @@ describe.sequential("students and enrollments against PostgreSQL", () => {
         startsAt,
         endsAt: new Date(startsAt.getTime() - 1),
       },
-    })).rejects.toMatchObject({ code: "P2004" });
+    })).rejects.toMatchObject({ code: "P2039" });
   });
 
   it("blocks class inactivation while an active enrollment exists", async () => {

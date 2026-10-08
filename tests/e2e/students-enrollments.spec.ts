@@ -10,9 +10,10 @@ test("coordenador cadastra aluno e recebe o código somente na criação em 390 
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page, authFixtures.schools.coordinator.email);
   await page.getByRole("listitem").filter({ hasText: authFixtures.schools.schoolA.name }).getByRole("button", { name: "Acessar escola" }).click();
+  await expect(page).toHaveURL(/\/escola$/);
 
   await page.goto("/escola/anos");
-  await page.getByLabel("Ano letivo").fill(String(authFixtures.students.year));
+  await page.getByRole("spinbutton", { name: "Ano letivo" }).fill(String(authFixtures.students.year));
   await page.getByRole("button", { name: "Cadastrar ano" }).click();
   await expect(page.getByRole("status")).toHaveText("Ano letivo cadastrado.");
 
@@ -31,7 +32,7 @@ test("coordenador cadastra aluno e recebe o código somente na criação em 390 
   await page.getByLabel("Senha temporária", { exact: true }).fill(authFixtures.students.temporaryPassword);
   await page.getByLabel("Confirmar senha temporária").fill(authFixtures.students.temporaryPassword);
   await page.getByRole("button", { name: "Cadastrar aluno" }).click();
-  await expect(page.getByRole("status")).toContainText("Aluno cadastrado e matriculado.");
+  await expect(page.getByRole("status").filter({ hasText: "Aluno cadastrado e matriculado." })).toBeVisible();
   studentCode = await page.getByLabel("Código de acesso do aluno").textContent() ?? "";
   expect(studentCode).toMatch(/^AL-[0-9A-F]{16}$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -47,13 +48,14 @@ test("aluno entra com o código e a transferência preserva o histórico", async
   const studentPage = await studentContext.newPage();
   await login(studentPage, studentCode.toLowerCase(), authFixtures.students.temporaryPassword);
   await expect(studentPage).toHaveURL(/\/aluno$/);
-  await expect(studentPage.getByText(authFixtures.students.name)).toBeVisible();
+  await expect(studentPage.getByRole("heading", { name: "Área do aluno" })).toBeVisible();
   await studentContext.close();
 
   const coordinatorContext = await browser.newContext();
   const page = await coordinatorContext.newPage();
   await login(page, authFixtures.schools.coordinator.email);
   await page.getByRole("listitem").filter({ hasText: authFixtures.schools.schoolA.name }).getByRole("button", { name: "Acessar escola" }).click();
+  await expect(page).toHaveURL(/\/escola$/);
   await page.goto("/escola/alunos");
   await page.getByRole("listitem").filter({ hasText: authFixtures.students.name }).getByRole("link", { name: "Ver aluno" }).click();
   await page.getByLabel("Turma").selectOption({ label: `${authFixtures.students.classB} · 3º ano · ${authFixtures.students.year}` });
@@ -61,8 +63,8 @@ test("aluno entra com o código e a transferência preserva o histórico", async
   await expect(page.getByRole("status")).toContainText("Transferência concluída.");
   await expect(page.getByRole("heading", { name: authFixtures.students.classA })).toBeVisible();
   await expect(page.getByRole("heading", { name: authFixtures.students.classB })).toBeVisible();
-  await expect(page.getByText("Encerrada", { exact: false })).toBeVisible();
-  await expect(page.getByText("Ativa", { exact: false })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: authFixtures.students.classA }) })).toContainText("Encerrada");
+  await expect(page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: authFixtures.students.classB }) })).toContainText("Ativa");
   await coordinatorContext.close();
 });
 
@@ -71,6 +73,7 @@ test("redefinição revoga a senha anterior e SEMED consulta sem expor o código
   const page = await coordinatorContext.newPage();
   await login(page, authFixtures.schools.coordinator.email);
   await page.getByRole("listitem").filter({ hasText: authFixtures.schools.schoolA.name }).getByRole("button", { name: "Acessar escola" }).click();
+  await expect(page).toHaveURL(/\/escola$/);
   await page.goto("/escola/alunos");
   await page.getByRole("listitem").filter({ hasText: authFixtures.students.name }).getByRole("link", { name: "Ver aluno" }).click();
   await page.getByLabel("Nova senha", { exact: true }).fill(authFixtures.students.newPassword);
@@ -88,6 +91,7 @@ test("redefinição revoga a senha anterior e SEMED consulta sem expor o código
   const adminContext = await browser.newContext();
   const adminPage = await adminContext.newPage();
   await login(adminPage, authFixtures.recovery.adminEmail);
+  await expect(adminPage).toHaveURL(/\/admin$/);
   await adminPage.goto("/admin/escolas");
   await adminPage.getByRole("listitem").filter({ hasText: authFixtures.schools.schoolA.name }).getByRole("link", { name: "Gerenciar" }).click();
   await adminPage.getByRole("link", { name: "Gerenciar alunos" }).click();
@@ -100,6 +104,7 @@ test("redefinição revoga a senha anterior e SEMED consulta sem expor o código
 test("professor não acessa a gestão de alunos", async ({ page }) => {
   await login(page, authFixtures.schools.teacherOne.email);
   await page.getByRole("listitem").filter({ hasText: authFixtures.schools.schoolA.name }).getByRole("button", { name: "Acessar escola" }).click();
+  await expect(page).toHaveURL(/\/professor$/);
   await page.goto("/escola/alunos");
   await expect(page).toHaveURL(/\/professor$/);
   await expect(page.getByRole("heading", { name: "Alunos" })).toHaveCount(0);

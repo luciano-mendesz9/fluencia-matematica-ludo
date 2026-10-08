@@ -29,6 +29,10 @@ export default async function SchoolPage() {
           <h2 className="text-lg font-bold text-foreground">Alunos</h2>
           <p className="mt-2 text-sm text-muted">Cadastre alunos e gerencie matrículas individualmente.</p>
         </Link>
+        <Link href="/escola/pessoas" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
+          <h2 className="text-lg font-bold text-foreground">Pessoas e atribuições</h2>
+          <p className="mt-2 text-sm text-muted">Cadastre professores e limite o acesso às turmas vigentes.</p>
+        </Link>
       </div>
     </AppShell>
   );

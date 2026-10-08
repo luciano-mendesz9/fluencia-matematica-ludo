@@ -1,6 +1,6 @@
 # FM-009 — Adultos, papéis e atribuições docentes
 
-**Ordem/fase:** 9/Escola | **Branch:** `task/FM-009-teachers-assignments` | **Situação:** planejada
+**Ordem/fase:** 9/Escola | **Branch:** `task/FM-009-teachers-assignments` | **Situação:** integrada e verificada com PostgreSQL/Chromium em 08/10/2026
 
 ## Objetivo/escopo
 
