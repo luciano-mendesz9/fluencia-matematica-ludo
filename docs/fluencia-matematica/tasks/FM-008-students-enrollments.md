@@ -1,6 +1,6 @@
 # FM-008 — Alunos, códigos e matrículas
 
-**Ordem/fase:** 8/Escola | **Branch:** `task/FM-008-students-enrollments` | **Situação:** verificada com PostgreSQL/Chromium; integração em preparação
+**Ordem/fase:** 8/Escola | **Branch:** `task/FM-008-students-enrollments` | **Situação:** integrada e verificada com PostgreSQL/Chromium em 08/10/2026
 
 ## Objetivo/dependências
 
