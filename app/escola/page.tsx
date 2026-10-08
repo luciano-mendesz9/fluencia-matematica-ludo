@@ -16,7 +16,7 @@ export default async function SchoolPage() {
   return (
     <AppShell areaLabel="Coordenação" currentUserLabel={session.user.name} navigation={schoolNavigation} accountAction={<LogoutForm />} contextAction={<SchoolSwitcher userId={session.user.id} schools={schools} currentSchoolId={schoolContext.schoolId} />} statusLabel={schoolContext.schoolName}>
       <StructurePanel title={`Coordenação — ${schoolContext.schoolName}`} description="Gerencie os anos letivos e as turmas da escola selecionada. O vínculo e o contexto são revalidados no servidor em cada operação." />
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Link href="/escola/anos" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
           <h2 className="text-lg font-bold text-foreground">Anos letivos</h2>
           <p className="mt-2 text-sm text-muted">Cadastre e acompanhe os períodos escolares.</p>
@@ -24,6 +24,10 @@ export default async function SchoolPage() {
         <Link href="/escola/turmas" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
           <h2 className="text-lg font-bold text-foreground">Turmas</h2>
           <p className="mt-2 text-sm text-muted">Organize turmas do 1º ao 5º ano.</p>
+        </Link>
+        <Link href="/escola/pessoas" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
+          <h2 className="text-lg font-bold text-foreground">Pessoas e atribuições</h2>
+          <p className="mt-2 text-sm text-muted">Cadastre professores e limite o acesso às turmas vigentes.</p>
         </Link>
       </div>
     </AppShell>

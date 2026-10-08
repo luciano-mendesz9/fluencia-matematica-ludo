@@ -342,6 +342,14 @@ export async function updateClassGroup(input: {
       if (input.status === "ACTIVE" && targetYear.status !== "ACTIVE") {
         throw new AuthorizationError("STATE_CONFLICT", "Uma turma ativa precisa pertencer a um ano letivo ativo.");
       }
+      if (input.status === "INACTIVE") {
+        const activeAssignments = await transaction.teacherClassAssignment.count({
+          where: { classId: before.id, schoolId: input.schoolId, status: "ACTIVE" },
+        });
+        if (activeAssignments > 0) {
+          throw new AuthorizationError("STATE_CONFLICT", "Encerre as atribuições docentes ativas antes de inativar a turma.");
+        }
+      }
       const changed = await transaction.classGroup.updateMany({
         where: { id: before.id, schoolId: input.schoolId, revision: input.revision },
         data: {
