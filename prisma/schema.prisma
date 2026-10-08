@@ -33,6 +33,16 @@ enum MembershipStatus {
   ENDED
 }
 
+enum AcademicYearStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ClassGroupStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -63,8 +73,44 @@ model School {
   createdAt     DateTime           @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime           @updatedAt @db.Timestamptz(3)
   memberships   SchoolMembership[]
+  academicYears AcademicYear[]
+  classGroups   ClassGroup[]
 
   @@index([status, name])
+}
+
+model AcademicYear {
+  id          String             @id @default(uuid()) @db.Uuid
+  schoolId    String             @db.Uuid
+  year        Int
+  status      AcademicYearStatus @default(ACTIVE)
+  revision    Int                @default(1)
+  createdAt   DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime           @updatedAt @db.Timestamptz(3)
+  school      School             @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  classGroups ClassGroup[]
+
+  @@unique([schoolId, year])
+  @@unique([id, schoolId])
+  @@index([schoolId, status, year])
+}
+
+model ClassGroup {
+  id             String           @id @default(uuid()) @db.Uuid
+  schoolId       String           @db.Uuid
+  academicYearId String           @db.Uuid
+  grade          Int
+  name           String           @db.VarChar(120)
+  normalizedName String           @db.VarChar(120)
+  status         ClassGroupStatus @default(ACTIVE)
+  revision       Int              @default(1)
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
+  school         School           @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  academicYear   AcademicYear     @relation(fields: [academicYearId, schoolId], references: [id, schoolId], onDelete: Restrict)
+
+  @@unique([schoolId, academicYearId, normalizedName])
+  @@index([schoolId, status, academicYearId, grade, name])
 }
 
 model SchoolMembership {

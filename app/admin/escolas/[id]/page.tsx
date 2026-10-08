@@ -19,6 +19,10 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ i
     <AppShell areaLabel="Administração" currentUserLabel={session.user.name} navigation={navigation} accountAction={<LogoutForm />} statusLabel="SEMED">
       <Link href="/admin/escolas" className="font-semibold text-brand hover:text-brand-hover">← Voltar às escolas</Link>
       <h1 className="mt-5 text-3xl font-bold text-foreground">{school.name}</h1>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Link href={`/admin/escolas/${school.id}/anos`} className="inline-flex min-h-11 items-center rounded-control border border-brand px-4 font-semibold text-brand hover:bg-blue-50">Gerenciar anos letivos</Link>
+        <Link href={`/admin/escolas/${school.id}/turmas`} className="inline-flex min-h-11 items-center rounded-control border border-brand px-4 font-semibold text-brand hover:bg-blue-50">Gerenciar turmas</Link>
+      </div>
       <div className="mt-6 grid gap-8 xl:grid-cols-2">
         <section className="rounded-panel border border-border bg-surface p-5 sm:p-6" aria-labelledby="edit-school-title">
           <h2 id="edit-school-title" className="mb-5 text-xl font-bold">Dados da escola</h2>

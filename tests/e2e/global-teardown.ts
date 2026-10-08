@@ -29,6 +29,8 @@ export default async function globalTeardown() {
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[]) OR "schoolId" = ANY($3::uuid[])',
       [schoolUserIds, [...schoolUserIds, ...schoolIds, ...membershipIds], schoolIds],
     );
+    await pool.query('DELETE FROM "ClassGroup" WHERE "schoolId" = ANY($1::uuid[])', [schoolIds]);
+    await pool.query('DELETE FROM "AcademicYear" WHERE "schoolId" = ANY($1::uuid[])', [schoolIds]);
     await pool.query('DELETE FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);
     await pool.query('DELETE FROM "School" WHERE "id" = ANY($1::uuid[])', [schoolIds]);
     await pool.query('DELETE FROM "User" WHERE "id" = ANY($1::uuid[])', [schoolUserIds]);
