@@ -2,7 +2,7 @@
 
 Estado em 07/10/2026: FM-001, FM-002, FM-003 e FM-004 estão **integradas**; FM-003/004 foram
 verificadas com Neon de desenvolvimento. FM-005 e FM-006 estão **verificadas na branch combinada**,
-ainda não integradas. FM-007 está **implementada localmente em branch encadeada** sobre FM-005/006,
+ainda não integradas. FM-007 está **implementada e publicada em branch encadeada** sobre FM-005/006,
 com validação PostgreSQL/Playwright pendente; FM-008–027 permanecem **planejadas**. Branch base de
 integração: `main`, publicada em `origin/main`.
 
