@@ -78,6 +78,8 @@ export default async function globalSetup() {
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[]) OR "schoolId" = ANY($3::uuid[])',
       [staleUserIds, [...staleUserIds, ...staleSchoolIds, ...staleMembershipIds], staleSchoolIds],
     );
+    await pool.query('DELETE FROM "ClassGroup" WHERE "schoolId" = ANY($1::uuid[])', [staleSchoolIds]);
+    await pool.query('DELETE FROM "AcademicYear" WHERE "schoolId" = ANY($1::uuid[])', [staleSchoolIds]);
     await pool.query('DELETE FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [staleUserIds, staleSchoolIds]);
     await pool.query('DELETE FROM "School" WHERE "id" = ANY($1::uuid[])', [staleSchoolIds]);
     await pool.query('DELETE FROM "User" WHERE "id" = ANY($1::uuid[])', [staleUserIds]);

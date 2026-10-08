@@ -104,6 +104,16 @@ export async function getSchoolForAdmin(actor: AuthenticatedPrincipal, schoolId:
   return school;
 }
 
+export async function getSchoolSummaryForAdmin(actor: AuthenticatedPrincipal, schoolId: string) {
+  assertGlobalRole(actor, ["SEMED_ADMIN"]);
+  const school = await prisma.school.findUnique({
+    where: { id: schoolId },
+    select: { id: true, name: true, status: true },
+  });
+  if (!school) throw new AuthorizationError("NOT_FOUND", "Escola não encontrada.");
+  return school;
+}
+
 export async function createSchool(input: {
   actor: AuthenticatedPrincipal;
   name: string;
@@ -168,10 +178,16 @@ export async function updateSchool(input: {
   });
   if (!before) throw new AuthorizationError("NOT_FOUND", "Escola não encontrada.");
   if (input.status === "INACTIVE") {
-    const activeMemberships = await prisma.schoolMembership.count({
-      where: { schoolId: input.schoolId, status: "ACTIVE", OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
-    });
-    if (activeMemberships > 0) throw new AuthorizationError("STATE_CONFLICT", "Encerre os vínculos ativos antes de inativar a escola.");
+    const [activeMemberships, activeAcademicYears, activeClasses] = await Promise.all([
+      prisma.schoolMembership.count({
+        where: { schoolId: input.schoolId, status: "ACTIVE", OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
+      }),
+      prisma.academicYear.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
+      prisma.classGroup.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
+    ]);
+    if (activeMemberships > 0 || activeAcademicYears > 0 || activeClasses > 0) {
+      throw new AuthorizationError("STATE_CONFLICT", "Encerre vínculos, anos letivos e turmas ativos antes de inativar a escola.");
+    }
   }
   try {
     return await prisma.$transaction(async (transaction) => {

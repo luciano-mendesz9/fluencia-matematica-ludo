@@ -35,4 +35,9 @@ export const authFixtures = {
     schoolC: { name: "Escola Celeste E2E", code: "E2E-FM006-C" },
     created: { name: "Escola Criada E2E", code: "E2E-FM006-CREATED" },
   },
+  academics: {
+    year: 2097,
+    className: "Turma FM-007 E2E",
+    updatedClassName: "Turma FM-007 Atualizada",
+  },
 } as const;

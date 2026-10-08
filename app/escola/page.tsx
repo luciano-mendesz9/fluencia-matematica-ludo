@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AppShell } from "@/src/components/layout/app-shell";
 import { StructurePanel } from "@/src/components/layout/structure-panel";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { SchoolSwitcher } from "@/src/features/schools/school-forms";
+import { schoolNavigation } from "@/src/features/academics/navigation";
 import { requireArea } from "@/src/server/auth/guard";
 import { listAvailableSchools } from "@/src/server/schools/service";
-
-const navigation = [{ href: "/escola", label: "Visão geral" }];
 
 export default async function SchoolPage() {
   const session = await requireArea("escola");
@@ -14,8 +14,18 @@ export default async function SchoolPage() {
   if (!schoolContext) redirect("/selecionar-escola");
   const schools = await listAvailableSchools(session.user.id);
   return (
-    <AppShell areaLabel="Coordenação" currentUserLabel={session.user.name} navigation={navigation} accountAction={<LogoutForm />} contextAction={<SchoolSwitcher userId={session.user.id} schools={schools} currentSchoolId={schoolContext.schoolId} />} statusLabel={schoolContext.schoolName}>
-      <StructurePanel title={`Coordenação — ${schoolContext.schoolName}`} description="O vínculo de coordenação e a escola atual foram confirmados no servidor. Cadastros escolares serão conectados nas tarefas seguintes." />
+    <AppShell areaLabel="Coordenação" currentUserLabel={session.user.name} navigation={schoolNavigation} accountAction={<LogoutForm />} contextAction={<SchoolSwitcher userId={session.user.id} schools={schools} currentSchoolId={schoolContext.schoolId} />} statusLabel={schoolContext.schoolName}>
+      <StructurePanel title={`Coordenação — ${schoolContext.schoolName}`} description="Gerencie os anos letivos e as turmas da escola selecionada. O vínculo e o contexto são revalidados no servidor em cada operação." />
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Link href="/escola/anos" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
+          <h2 className="text-lg font-bold text-foreground">Anos letivos</h2>
+          <p className="mt-2 text-sm text-muted">Cadastre e acompanhe os períodos escolares.</p>
+        </Link>
+        <Link href="/escola/turmas" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
+          <h2 className="text-lg font-bold text-foreground">Turmas</h2>
+          <p className="mt-2 text-sm text-muted">Organize turmas do 1º ao 5º ano.</p>
+        </Link>
+      </div>
     </AppShell>
   );
 }
