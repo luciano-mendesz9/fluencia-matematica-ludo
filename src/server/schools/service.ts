@@ -178,15 +178,16 @@ export async function updateSchool(input: {
   });
   if (!before) throw new AuthorizationError("NOT_FOUND", "Escola não encontrada.");
   if (input.status === "INACTIVE") {
-    const [activeMemberships, activeAcademicYears, activeClasses] = await Promise.all([
+    const [activeMemberships, activeAcademicYears, activeClasses, activeEnrollments] = await Promise.all([
       prisma.schoolMembership.count({
         where: { schoolId: input.schoolId, status: "ACTIVE", OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
       }),
       prisma.academicYear.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
       prisma.classGroup.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
+      prisma.enrollment.count({ where: { schoolId: input.schoolId, status: "ACTIVE" } }),
     ]);
-    if (activeMemberships > 0 || activeAcademicYears > 0 || activeClasses > 0) {
-      throw new AuthorizationError("STATE_CONFLICT", "Encerre vínculos, anos letivos e turmas ativos antes de inativar a escola.");
+    if (activeMemberships > 0 || activeAcademicYears > 0 || activeClasses > 0 || activeEnrollments > 0) {
+      throw new AuthorizationError("STATE_CONFLICT", "Encerre vínculos, anos letivos, turmas e matrículas ativos antes de inativar a escola.");
     }
   }
   try {

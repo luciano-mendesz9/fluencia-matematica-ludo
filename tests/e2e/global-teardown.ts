@@ -19,7 +19,7 @@ export default async function globalTeardown() {
       authFixtures.schools.schoolC.code,
       authFixtures.schools.created.code,
     ];
-    const schoolUsers = await pool.query('SELECT "id" FROM "User" WHERE "normalizedEmail" = ANY($1::text[])', [schoolEmails]);
+    const schoolUsers = await pool.query('SELECT "id" FROM "User" WHERE "normalizedEmail" = ANY($1::text[]) OR "name" = $2', [schoolEmails, authFixtures.students.name]);
     const schools = await pool.query('SELECT "id" FROM "School" WHERE "externalCode" = ANY($1::text[])', [schoolCodes]);
     const schoolUserIds = schoolUsers.rows.map((row) => row.id);
     const schoolIds = schools.rows.map((row) => row.id);
@@ -29,6 +29,9 @@ export default async function globalTeardown() {
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[]) OR "schoolId" = ANY($3::uuid[])',
       [schoolUserIds, [...schoolUserIds, ...schoolIds, ...membershipIds], schoolIds],
     );
+    await pool.query('DELETE FROM "Session" WHERE "userId" = ANY($1::uuid[])', [schoolUserIds]);
+    await pool.query('DELETE FROM "PasswordReset" WHERE "userId" = ANY($1::uuid[])', [schoolUserIds]);
+    await pool.query('DELETE FROM "Enrollment" WHERE "studentId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);
     await pool.query('DELETE FROM "ClassGroup" WHERE "schoolId" = ANY($1::uuid[])', [schoolIds]);
     await pool.query('DELETE FROM "AcademicYear" WHERE "schoolId" = ANY($1::uuid[])', [schoolIds]);
     await pool.query('DELETE FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);

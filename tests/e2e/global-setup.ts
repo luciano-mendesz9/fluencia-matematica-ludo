@@ -68,7 +68,7 @@ export default async function globalSetup() {
       authFixtures.schools.schoolC.code,
       authFixtures.schools.created.code,
     ];
-    const staleUsers = await pool.query('SELECT "id" FROM "User" WHERE "normalizedEmail" = ANY($1::text[])', [schoolEmails]);
+    const staleUsers = await pool.query('SELECT "id" FROM "User" WHERE "normalizedEmail" = ANY($1::text[]) OR "name" = $2', [schoolEmails, authFixtures.students.name]);
     const staleSchools = await pool.query('SELECT "id" FROM "School" WHERE "externalCode" = ANY($1::text[])', [schoolCodes]);
     const staleUserIds = staleUsers.rows.map((row) => row.id);
     const staleSchoolIds = staleSchools.rows.map((row) => row.id);
@@ -78,6 +78,9 @@ export default async function globalSetup() {
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[]) OR "schoolId" = ANY($3::uuid[])',
       [staleUserIds, [...staleUserIds, ...staleSchoolIds, ...staleMembershipIds], staleSchoolIds],
     );
+    await pool.query('DELETE FROM "Session" WHERE "userId" = ANY($1::uuid[])', [staleUserIds]);
+    await pool.query('DELETE FROM "PasswordReset" WHERE "userId" = ANY($1::uuid[])', [staleUserIds]);
+    await pool.query('DELETE FROM "Enrollment" WHERE "studentId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [staleUserIds, staleSchoolIds]);
     await pool.query('DELETE FROM "ClassGroup" WHERE "schoolId" = ANY($1::uuid[])', [staleSchoolIds]);
     await pool.query('DELETE FROM "AcademicYear" WHERE "schoolId" = ANY($1::uuid[])', [staleSchoolIds]);
     await pool.query('DELETE FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [staleUserIds, staleSchoolIds]);

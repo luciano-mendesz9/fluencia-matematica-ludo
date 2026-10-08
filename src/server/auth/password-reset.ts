@@ -151,6 +151,7 @@ export async function resetStudentPassword(input: {
   studentId: string;
   newPassword: string;
   authorizeCoordinator?: CoordinatorStudentResetAuthorization;
+  auditSchoolId?: string;
   correlationId?: string;
 }) {
   const password = newPasswordSchema.safeParse(input.newPassword);
@@ -162,7 +163,7 @@ export async function resetStudentPassword(input: {
   });
   if (!student) throw new AuthorizationError("NOT_FOUND", "Aluno não encontrado.");
 
-  let schoolId: string | undefined;
+  let schoolId = input.actor.globalRole === "SEMED_ADMIN" ? input.auditSchoolId : undefined;
   if (input.actor.globalRole !== "SEMED_ADMIN") {
     const authorization = await input.authorizeCoordinator?.({ actorId: input.actor.id, studentId: student.id });
     if (!authorization || authorization.role !== "COORDINATOR") {

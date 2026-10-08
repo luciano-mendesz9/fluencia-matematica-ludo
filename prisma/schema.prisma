@@ -43,6 +43,11 @@ enum ClassGroupStatus {
   INACTIVE
 }
 
+enum EnrollmentStatus {
+  ACTIVE
+  ENDED
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -60,6 +65,7 @@ model User {
   passwordResets  PasswordReset[] @relation("PasswordResetUser")
   requestedResets PasswordReset[] @relation("PasswordResetRequester")
   schoolMemberships SchoolMembership[]
+  enrollments      Enrollment[]
 
   @@index([status])
 }
@@ -75,6 +81,7 @@ model School {
   memberships   SchoolMembership[]
   academicYears AcademicYear[]
   classGroups   ClassGroup[]
+  enrollments   Enrollment[]
 
   @@index([status, name])
 }
@@ -108,9 +115,30 @@ model ClassGroup {
   updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
   school         School           @relation(fields: [schoolId], references: [id], onDelete: Restrict)
   academicYear   AcademicYear     @relation(fields: [academicYearId, schoolId], references: [id, schoolId], onDelete: Restrict)
+  enrollments    Enrollment[]
 
+  @@unique([id, schoolId])
   @@unique([schoolId, academicYearId, normalizedName])
   @@index([schoolId, status, academicYearId, grade, name])
+}
+
+model Enrollment {
+  id        String           @id @default(uuid()) @db.Uuid
+  studentId String           @db.Uuid
+  schoolId  String           @db.Uuid
+  classId   String           @db.Uuid
+  status    EnrollmentStatus @default(ACTIVE)
+  startsAt  DateTime         @default(now()) @db.Timestamptz(3)
+  endsAt    DateTime?        @db.Timestamptz(3)
+  revision  Int              @default(1)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime         @updatedAt @db.Timestamptz(3)
+  student   User             @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  school    School           @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  classGroup ClassGroup      @relation(fields: [classId, schoolId], references: [id, schoolId], onDelete: Restrict)
+
+  @@index([studentId, status, startsAt, endsAt])
+  @@index([schoolId, status, classId, startsAt])
 }
 
 model SchoolMembership {

@@ -22,6 +22,7 @@ export default async function SchoolDetailPage({ params }: { params: Promise<{ i
       <div className="mt-5 flex flex-wrap gap-3">
         <Link href={`/admin/escolas/${school.id}/anos`} className="inline-flex min-h-11 items-center rounded-control border border-brand px-4 font-semibold text-brand hover:bg-blue-50">Gerenciar anos letivos</Link>
         <Link href={`/admin/escolas/${school.id}/turmas`} className="inline-flex min-h-11 items-center rounded-control border border-brand px-4 font-semibold text-brand hover:bg-blue-50">Gerenciar turmas</Link>
+        <Link href={`/admin/escolas/${school.id}/alunos`} className="inline-flex min-h-11 items-center rounded-control border border-brand px-4 font-semibold text-brand hover:bg-blue-50">Gerenciar alunos</Link>
       </div>
       <div className="mt-6 grid gap-8 xl:grid-cols-2">
         <section className="rounded-panel border border-border bg-surface p-5 sm:p-6" aria-labelledby="edit-school-title">

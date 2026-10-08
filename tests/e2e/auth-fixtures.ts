@@ -40,4 +40,12 @@ export const authFixtures = {
     className: "Turma FM-007 E2E",
     updatedClassName: "Turma FM-007 Atualizada",
   },
+  students: {
+    year: 2096,
+    name: "Aluno FM-008 E2E",
+    classA: "Turma FM-008 Azul",
+    classB: "Turma FM-008 Branca",
+    temporaryPassword: "Senha-Aluno-FM008-2026",
+    newPassword: "Nova-Senha-FM008-2026",
+  },
 } as const;
