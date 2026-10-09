@@ -1,6 +1,6 @@
 # FM-012 — Envio e publicação de questões pela SEMED
 
-**Ordem/fase:** 12/Conteúdo | **Branch:** `task/FM-012-semed-sharing` | **Situação:** planejada
+**Ordem/fase:** 12/Conteúdo | **Branch:** `task/FM-011-FM-012-question-editor-semed-sharing` | **Situação:** verificada e publicada na branch combinada; não integrada
 
 ## Objetivo
 

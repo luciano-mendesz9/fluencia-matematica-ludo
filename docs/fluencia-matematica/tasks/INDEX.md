@@ -1,9 +1,9 @@
 # Índice ordenado de tarefas
 
-Estado em 08/10/2026: FM-001–FM-009 estão **integradas**; FM-003–009 foram verificadas com Neon de
-desenvolvimento e os fluxos FM-007–009 passaram em PostgreSQL e Chromium na árvore reconciliada.
-FM-010–027 permanecem
-**planejadas**. Branch base de integração: `main`, publicada em `origin/main`.
+Estado em 09/10/2026: FM-001–FM-010 estão **integradas** em `origin/main`. FM-011 e FM-012 estão
+**verificadas e publicadas** em uma branch combinada autorizada, com PostgreSQL e Chromium, mas ainda
+não foram integradas. FM-013–027 permanecem **planejadas**; dependências exigem integração na
+base, não apenas verificação em branch. Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |
@@ -17,8 +17,8 @@ FM-010–027 permanecem
 | 8 | [FM-008](FM-008-students-enrollments.md) | Escola: alunos/matrículas | 007 | `task/FM-008-students-enrollments` | código único e histórico |
 | 9 | [FM-009](FM-009-teachers-assignments.md) | Escola: adultos/docência | 007 | `task/FM-009-teachers-assignments` | papéis e turmas vigentes |
 | 10 | [FM-010](FM-010-question-bank.md) | Conteúdo: banco e versões | 008,009 | `task/FM-010-question-bank` | ownership/versionamento |
-| 11 | [FM-011](FM-011-question-editor-media.md) | Conteúdo: editor/correção/áudio | 010 | `task/FM-011-question-editor-media` | prévia fiel e DTO sem gabarito |
-| 12 | [FM-012](FM-012-semed-sharing.md) | Conteúdo: envio/revisão SEMED | 011 | `task/FM-012-semed-sharing` | cópia rastreável |
+| 11 | [FM-011](FM-011-question-editor-media.md) | Conteúdo: editor/correção/áudio | 010 | `task/FM-011-FM-012-question-editor-semed-sharing` | prévia fiel e DTO sem gabarito |
+| 12 | [FM-012](FM-012-semed-sharing.md) | Conteúdo: envio/revisão SEMED | 011 | `task/FM-011-FM-012-question-editor-semed-sharing` | cópia rastreável |
 | 13 | [FM-013](FM-013-activity-authoring.md) | Atividade: criação/cobertura | 011 | `task/FM-013-activity-authoring` | versões fixas e dificuldades 1–6 |
 | 14 | [FM-014](FM-014-participation-target.md) | Atividade: aluno/meta/prática extra | 013 | `task/FM-014-participation-target` | meta persiste entre partidas |
 | 15 | [FM-015](FM-015-activity-lifecycle.md) | Atividade: abrir/fechar/concorrência | 014 | `task/FM-015-activity-lifecycle` | corrida definida e auditada |
