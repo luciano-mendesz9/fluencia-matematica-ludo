@@ -1,0 +1,48 @@
+import { expect, test } from "@playwright/test";
+import { authFixtures } from "./auth-fixtures";
+import { login } from "./auth-helpers";
+
+test.describe.configure({ mode: "serial" });
+
+test("SEMED cria taxonomia, questão, filtra e preserva versão em 390 px", async ({ browser }) => {
+  test.setTimeout(60_000);
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await login(page, authFixtures.recovery.adminEmail);
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.goto("/questoes");
+  await page.getByRole("heading", { name: "Banco de questões" }).waitFor();
+  const themeForm = page.getByRole("heading", { name: "Novo tema" }).locator("xpath=..");
+  await themeForm.getByLabel("Nome").fill("Álgebra FM-010 E2E");
+  await themeForm.getByRole("button", { name: "Cadastrar tema" }).click();
+  await expect(themeForm.getByRole("status")).toHaveText("Tema cadastrado.");
+  const skillForm = page.getByRole("heading", { name: "Nova habilidade" }).locator("xpath=..");
+  await skillForm.getByLabel("Tema").selectOption({ label: "Álgebra FM-010 E2E" });
+  await skillForm.getByLabel("Nome").fill("Reconhecer padrões");
+  await skillForm.getByRole("button", { name: "Cadastrar habilidade" }).click();
+  await expect(skillForm.getByRole("status")).toContainText("Habilidade cadastrada.");
+  const form = page.getByRole("heading", { name: "Nova questão da rede" }).locator("xpath=..");
+  await form.locator('select[name="grade"]').selectOption("1");
+  await form.locator('select[name="difficulty"]').selectOption("2");
+  await form.locator('select[name="themeId"]').selectOption({ label: "Álgebra FM-010 E2E" });
+  await form.locator('select[name="skillId"]').selectOption({ label: "Reconhecer padrões" });
+  await form.getByLabel("Enunciado").fill("Complete a sequência 2, 4, 6, __.");
+  await form.getByRole("button", { name: "Cadastrar questão" }).click();
+  await expect(form.getByRole("status")).toHaveText("Questão cadastrada na versão 1.");
+  const filters = page.getByRole("button", { name: "Filtrar" }).locator("xpath=..");
+  await filters.locator('select[name="difficulty"]').selectOption("2");
+  await filters.getByRole("button", { name: "Filtrar" }).click();
+  await expect(page).toHaveURL(/difficulty=2/);
+  await page.getByRole("link", { name: "Ver histórico" }).click();
+  await page.getByLabel("Enunciado").fill("Complete a sequência 3, 6, 9, __.");
+  await page.getByRole("button", { name: "Criar nova versão" }).click();
+  await expect(page.getByRole("status")).toHaveText("Versão 2 criada sem alterar o histórico.");
+  await expect(page.getByRole("heading", { name: /Versão 2/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Versão 1" })).toBeVisible();
+  await page.getByRole("button", { name: "Arquivar questão" }).click();
+  await expect(page.getByRole("status")).toHaveText("Questão arquivada sem apagar o histórico.");
+  await expect(page.getByRole("heading", { name: /Criar versão/ })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Versão 1" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await context.close();
+});

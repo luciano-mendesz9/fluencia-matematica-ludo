@@ -9,6 +9,7 @@ import { listAvailableSchools } from "@/src/server/schools/service";
 const navigation = [
   { href: "/professor", label: "Visão geral" },
   { href: "/professor/turmas", label: "Minhas turmas" },
+  { href: "/questoes", label: "Banco de questões" },
 ];
 
 export default async function ProfessorPage() {

@@ -53,14 +53,10 @@ describe.sequential("adults, roles and teacher assignments against PostgreSQL", 
     schoolBId = schoolB.id;
     schoolIds.push(schoolAId, schoolBId);
     await prisma.schoolMembership.create({ data: { userId: coordinator.id, schoolId: schoolAId, role: "COORDINATOR" } });
-    const [yearA, yearB] = await Promise.all([
-      createAcademicYear({ actor: admin, schoolId: schoolAId, year: 2029 }),
-      createAcademicYear({ actor: admin, schoolId: schoolBId, year: 2029 }),
-    ]);
-    const [classA, classB] = await Promise.all([
-      createClassGroup({ actor: admin, schoolId: schoolAId, academicYearId: yearA.id, grade: 4, name: "FM009 Turma A" }),
-      createClassGroup({ actor: admin, schoolId: schoolBId, academicYearId: yearB.id, grade: 4, name: "FM009 Turma B" }),
-    ]);
+    const yearA = await createAcademicYear({ actor: admin, schoolId: schoolAId, year: 2029 });
+    const yearB = await createAcademicYear({ actor: admin, schoolId: schoolBId, year: 2029 });
+    const classA = await createClassGroup({ actor: admin, schoolId: schoolAId, academicYearId: yearA.id, grade: 4, name: "FM009 Turma A" });
+    const classB = await createClassGroup({ actor: admin, schoolId: schoolBId, academicYearId: yearB.id, grade: 4, name: "FM009 Turma B" });
     classAId = classA.id;
     classBId = classB.id;
   });

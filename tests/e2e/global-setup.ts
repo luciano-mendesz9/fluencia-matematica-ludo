@@ -77,6 +77,8 @@ export default async function globalSetup() {
     const staleSchoolIds = staleSchools.rows.map((row) => row.id);
     const staleMemberships = await pool.query('SELECT "id" FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [staleUserIds, staleSchoolIds]);
     const staleMembershipIds = staleMemberships.rows.map((row) => row.id);
+    await pool.query('DELETE FROM "QuestionVersion" WHERE "questionId" IN (SELECT "id" FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]))', [staleUserIds]);
+    await pool.query('DELETE FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[])', [staleUserIds]);
     await pool.query(
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[]) OR "schoolId" = ANY($3::uuid[])',
       [staleUserIds, [...staleUserIds, ...staleSchoolIds, ...staleMembershipIds], staleSchoolIds],
@@ -155,6 +157,10 @@ export default async function globalSetup() {
       ...cleanupEmails,
     ], [authFixtures.student.identifier, authFixtures.recovery.studentCode]]);
     const fixtureUserIds = fixtureUsers.rows.map((row) => row.id);
+    await pool.query('DELETE FROM "QuestionVersion" WHERE "questionId" IN (SELECT "id" FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]))', [fixtureUserIds]);
+    await pool.query('DELETE FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[])', [fixtureUserIds]);
+    await pool.query('DELETE FROM "Skill" WHERE "themeId" IN (SELECT "id" FROM "Theme" WHERE "normalizedName" = $1)', ['algebra fm-010 e2e']);
+    await pool.query('DELETE FROM "Theme" WHERE "normalizedName" = $1', ['algebra fm-010 e2e']);
     await pool.query(
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[])',
       [fixtureUserIds, fixtureUserIds],
