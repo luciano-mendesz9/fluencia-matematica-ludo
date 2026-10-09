@@ -52,15 +52,11 @@ describe.sequential("students and enrollments against PostgreSQL", () => {
       { userId: coordinator.id, schoolId: schoolAId, role: "COORDINATOR" },
       { userId: teacher.id, schoolId: schoolAId, role: "TEACHER" },
     ] });
-    const [yearA, yearB] = await Promise.all([
-      createAcademicYear({ actor: admin, schoolId: schoolAId, year: 2028 }),
-      createAcademicYear({ actor: admin, schoolId: schoolBId, year: 2028 }),
-    ]);
-    const [classA, classB, foreignClass] = await Promise.all([
-      createClassGroup({ actor: admin, schoolId: schoolAId, academicYearId: yearA.id, grade: 3, name: "FM008 Turma A" }),
-      createClassGroup({ actor: admin, schoolId: schoolAId, academicYearId: yearA.id, grade: 3, name: "FM008 Turma B" }),
-      createClassGroup({ actor: admin, schoolId: schoolBId, academicYearId: yearB.id, grade: 3, name: "FM008 Turma Estrangeira" }),
-    ]);
+    const yearA = await createAcademicYear({ actor: admin, schoolId: schoolAId, year: 2028 });
+    const yearB = await createAcademicYear({ actor: admin, schoolId: schoolBId, year: 2028 });
+    const classA = await createClassGroup({ actor: admin, schoolId: schoolAId, academicYearId: yearA.id, grade: 3, name: "FM008 Turma A" });
+    const classB = await createClassGroup({ actor: admin, schoolId: schoolAId, academicYearId: yearA.id, grade: 3, name: "FM008 Turma B" });
+    const foreignClass = await createClassGroup({ actor: admin, schoolId: schoolBId, academicYearId: yearB.id, grade: 3, name: "FM008 Turma Estrangeira" });
     classAId = classA.id;
     classBId = classB.id;
     foreignClassId = foreignClass.id;

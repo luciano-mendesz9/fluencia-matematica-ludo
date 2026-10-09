@@ -53,6 +53,21 @@ enum TeacherAssignmentStatus {
   ENDED
 }
 
+enum CatalogStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum QuestionOrigin {
+  SEMED
+  PRIVATE
+}
+
+enum QuestionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -73,6 +88,9 @@ model User {
   schoolMemberships SchoolMembership[]
   enrollments      Enrollment[]
   teacherAssignments TeacherClassAssignment[]
+  ownedQuestions      Question[]        @relation("QuestionOwner")
+  createdQuestions    Question[]        @relation("QuestionCreator")
+  questionVersions    QuestionVersion[] @relation("QuestionVersionAuthor")
 
   @@index([status])
 }
@@ -248,4 +266,76 @@ model AuditEvent {
   @@index([actorId, at])
   @@index([targetType, targetId, at])
   @@index([correlationId])
+}
+
+model Theme {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String        @db.VarChar(120)
+  normalizedName String        @unique @db.VarChar(120)
+  status         CatalogStatus @default(ACTIVE)
+  revision       Int           @default(1)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  skills         Skill[]
+  versions       QuestionVersion[]
+
+  @@index([status, name])
+}
+
+model Skill {
+  id             String        @id @default(uuid()) @db.Uuid
+  themeId        String        @db.Uuid
+  name           String        @db.VarChar(160)
+  normalizedName String        @db.VarChar(160)
+  status         CatalogStatus @default(ACTIVE)
+  revision       Int           @default(1)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  theme          Theme         @relation(fields: [themeId], references: [id], onDelete: Restrict)
+  versions       QuestionVersion[]
+
+  @@unique([themeId, normalizedName])
+  @@unique([id, themeId])
+  @@index([themeId, status, name])
+}
+
+model Question {
+  id                  String         @id @default(uuid()) @db.Uuid
+  origin              QuestionOrigin
+  ownerId             String?        @db.Uuid
+  createdById         String         @db.Uuid
+  status              QuestionStatus @default(ACTIVE)
+  revision            Int            @default(1)
+  latestVersionNumber Int            @default(1)
+  createdAt           DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime       @updatedAt @db.Timestamptz(3)
+  owner               User?          @relation("QuestionOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  createdBy           User           @relation("QuestionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  versions            QuestionVersion[]
+
+  @@index([origin, status])
+  @@index([ownerId, status])
+}
+
+model QuestionVersion {
+  id            String   @id @default(uuid()) @db.Uuid
+  questionId    String   @db.Uuid
+  versionNumber Int
+  grade         Int
+  difficulty    Int
+  themeId       String   @db.Uuid
+  skillId       String?  @db.Uuid
+  statement     String   @db.Text
+  contentHash   String   @db.Char(64)
+  createdById   String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  theme         Theme    @relation(fields: [themeId], references: [id], onDelete: Restrict)
+  skill         Skill?   @relation(fields: [skillId, themeId], references: [id, themeId], onDelete: Restrict)
+  createdBy     User     @relation("QuestionVersionAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([questionId, versionNumber])
+  @@index([grade, difficulty])
+  @@index([themeId, skillId])
+  @@index([contentHash])
 }

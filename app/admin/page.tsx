@@ -7,6 +7,7 @@ const navigation = [
   { href: "/admin", label: "Visão geral" },
   { href: "/admin/escolas", label: "Escolas" },
   { href: "/admin/pessoas", label: "Pessoas globais" },
+  { href: "/questoes", label: "Banco de questões" },
   { href: "/admin/redefinir-senha-aluno", label: "Redefinir senha de aluno" },
 ];
 
