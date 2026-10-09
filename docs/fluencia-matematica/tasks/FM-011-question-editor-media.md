@@ -1,6 +1,6 @@
 # FM-011 — Editor, correção, mídia e áudio
 
-**Ordem/fase:** 11/Conteúdo | **Branch:** `task/FM-011-question-editor-media` | **Situação:** planejada
+**Ordem/fase:** 11/Conteúdo | **Branch:** `task/FM-011-FM-012-question-editor-semed-sharing` | **Situação:** verificada e publicada na branch combinada; não integrada
 
 ## Objetivo/escopo
 
