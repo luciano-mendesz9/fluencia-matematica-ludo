@@ -56,9 +56,11 @@ describe.sequential("versioned question bank against PostgreSQL", () => {
   it("combines SEMED questions with only the current teacher private questions", async () => {
     const network = await createQuestion({ actor: admin, grade: 1, difficulty: 2, themeId, skillId, statement: "Complete a sequência 2, 4, 6, __." });
     const privateA = await createQuestion({ actor: teacherA, grade: 1, difficulty: 4, themeId, statement: "Descubra o número desconhecido em x + 3 = 8." });
-    await createQuestion({ actor: teacherB, grade: 1, difficulty: 5, themeId, statement: "Resolva uma questão privada do outro professor." });
+    const privateB = await createQuestion({ actor: teacherB, grade: 1, difficulty: 5, themeId, statement: "Resolva uma questão privada do outro professor." });
     const visible = await listEligibleQuestions({ actor: teacherA });
-    expect(visible.map(({ id }) => id).sort()).toEqual([network.id, privateA.id].sort());
+    const visibleIds = visible.map(({ id }) => id);
+    expect(visibleIds).toEqual(expect.arrayContaining([network.id, privateA.id]));
+    expect(visibleIds).not.toContain(privateB.id);
     expect(visible[0]).not.toHaveProperty("answerKey");
   });
 

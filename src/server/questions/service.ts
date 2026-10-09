@@ -6,7 +6,7 @@ import { prisma } from "@/src/lib/prisma";
 import { AuthorizationError } from "@/src/server/auth/errors";
 import { assertGlobalRole, type AuthenticatedPrincipal } from "@/src/server/auth/policies";
 
-function clean(value: string) {
+export function clean(value: string) {
   return value.normalize("NFKC").trim().replace(/\s+/g, " ");
 }
 
@@ -14,7 +14,7 @@ function normalized(value: string) {
   return clean(value).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 }
 
-function uuid(value: string, message: string) {
+export function uuid(value: string, message: string) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
     throw new AuthorizationError("VALIDATION", message);
   }
@@ -30,7 +30,7 @@ function validateVersion(input: { grade: number; difficulty: number; themeId: st
   return { ...input, statement, skillId: input.skillId || null };
 }
 
-async function assertQuestionAuthor(actor: AuthenticatedPrincipal) {
+export async function assertQuestionAuthor(actor: AuthenticatedPrincipal) {
   if (actor.studentCode || actor.globalRole === "DEVELOPER") throw new AuthorizationError("FORBIDDEN", "Acesso não autorizado.");
   if (actor.globalRole === "SEMED_ADMIN") return "SEMED" as const;
   if (actor.globalRole) throw new AuthorizationError("FORBIDDEN", "Acesso não autorizado.");
@@ -47,7 +47,7 @@ async function assertQuestionAuthor(actor: AuthenticatedPrincipal) {
   return "PRIVATE" as const;
 }
 
-async function assertTaxonomy(client: Prisma.TransactionClient | typeof prisma, themeId: string, skillId?: string | null) {
+export async function assertTaxonomy(client: Prisma.TransactionClient | typeof prisma, themeId: string, skillId?: string | null) {
   const theme = await client.theme.findFirst({ where: { id: themeId, status: "ACTIVE" }, select: { id: true } });
   if (!theme) throw new AuthorizationError("VALIDATION", "Tema indisponível.");
   if (skillId) {
@@ -60,7 +60,7 @@ function hashVersion(input: { grade: number; difficulty: number; themeId: string
   return createHash("sha256").update(JSON.stringify(input)).digest("hex");
 }
 
-function mapWrite(error: unknown): never {
+export function mapWrite(error: unknown): never {
   if (error instanceof AuthorizationError) throw error;
   if (typeof error === "object" && error && "code" in error && (error.code === "P2002" || error.code === "P2034")) {
     throw new AuthorizationError("STATE_CONFLICT", "Os dados foram alterados por outra operação. Atualize a página e tente novamente.");
@@ -167,7 +167,8 @@ export async function listEligibleQuestions(input: { actor: AuthenticatedPrincip
 
 export async function getEligibleQuestion(input: { actor: AuthenticatedPrincipal; questionId: string }) {
   await assertQuestionAuthor(input.actor); uuid(input.questionId, "Questão inválida.");
-  const question = await prisma.question.findFirst({ where: { id: input.questionId, OR: [{ origin: "SEMED" }, { origin: "PRIVATE", ownerId: input.actor.id }] }, select: { id: true, origin: true, status: true, revision: true, latestVersionNumber: true, versions: { orderBy: { versionNumber: "desc" }, select: { versionNumber: true, grade: true, difficulty: true, statement: true, contentHash: true, createdAt: true, theme: { select: { id: true, name: true } }, skill: { select: { id: true, name: true } } } } } });
+  const visibility = input.actor.globalRole === "SEMED_ADMIN" ? [{ origin: "SEMED" as const }, { origin: "PRIVATE" as const, versions: { some: { submissions: { some: {} } } } }] : [{ origin: "SEMED" as const }, { origin: "PRIVATE" as const, ownerId: input.actor.id }];
+  const question = await prisma.question.findFirst({ where: { id: input.questionId, OR: visibility }, select: { id: true, origin: true, status: true, revision: true, latestVersionNumber: true, sourceQuestionId: true, sourceVersionId: true, versions: { orderBy: { versionNumber: "desc" }, select: { id: true, versionNumber: true, grade: true, difficulty: true, statement: true, answerType: true, explanation: true, numericExpected: true, contentHash: true, createdAt: true, theme: { select: { id: true, name: true } }, skill: { select: { id: true, name: true } }, options: { orderBy: { position: "asc" }, select: { stableId: true, text: true, position: true, isCorrect: true } }, media: { where: { kind: "IMAGE" }, select: { id: true, altText: true, mimeType: true, byteSize: true } }, submissions: { select: { id: true, status: true, revision: true, decisionNote: true, submittedAt: true, decidedAt: true, publishedQuestionId: true } } } } } });
   if (!question) throw new AuthorizationError("NOT_FOUND", "Questão não encontrada.");
-  return question;
+  return { ...question, versions: question.versions.map((version) => ({ ...version, numericExpected: version.numericExpected?.toString() ?? null })) };
 }

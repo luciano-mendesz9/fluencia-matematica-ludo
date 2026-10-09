@@ -68,6 +68,23 @@ enum QuestionStatus {
   ARCHIVED
 }
 
+enum QuestionAnswerType {
+  MULTIPLE_CHOICE
+  NUMERIC
+}
+
+enum QuestionMediaKind {
+  IMAGE
+}
+
+enum QuestionSubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  CHANGES_REQUESTED
+  REJECTED
+  APPROVED_PUBLISHED
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -91,6 +108,8 @@ model User {
   ownedQuestions      Question[]        @relation("QuestionOwner")
   createdQuestions    Question[]        @relation("QuestionCreator")
   questionVersions    QuestionVersion[] @relation("QuestionVersionAuthor")
+  questionSubmissions QuestionSubmission[] @relation("QuestionSubmitter")
+  questionReviews     QuestionSubmission[] @relation("QuestionReviewer")
 
   @@index([status])
 }
@@ -304,6 +323,8 @@ model Question {
   origin              QuestionOrigin
   ownerId             String?        @db.Uuid
   createdById         String         @db.Uuid
+  sourceQuestionId    String?        @db.Uuid
+  sourceVersionId     String?        @db.Uuid
   status              QuestionStatus @default(ACTIVE)
   revision            Int            @default(1)
   latestVersionNumber Int            @default(1)
@@ -311,10 +332,15 @@ model Question {
   updatedAt           DateTime       @updatedAt @db.Timestamptz(3)
   owner               User?          @relation("QuestionOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   createdBy           User           @relation("QuestionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  sourceQuestion      Question?      @relation("PublishedQuestionSource", fields: [sourceQuestionId], references: [id], onDelete: Restrict)
+  publishedCopies     Question[]     @relation("PublishedQuestionSource")
+  sourceVersion       QuestionVersion? @relation("PublishedVersionSource", fields: [sourceVersionId], references: [id], onDelete: Restrict)
+  publicationSubmissions QuestionSubmission[] @relation("SubmissionPublishedQuestion")
   versions            QuestionVersion[]
 
   @@index([origin, status])
   @@index([ownerId, status])
+  @@index([sourceQuestionId, sourceVersionId])
 }
 
 model QuestionVersion {
@@ -326,6 +352,9 @@ model QuestionVersion {
   themeId       String   @db.Uuid
   skillId       String?  @db.Uuid
   statement     String   @db.Text
+  answerType    QuestionAnswerType?
+  explanation   String?  @db.Text
+  numericExpected Decimal? @db.Decimal(18, 6)
   contentHash   String   @db.Char(64)
   createdById   String   @db.Uuid
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
@@ -333,9 +362,68 @@ model QuestionVersion {
   theme         Theme    @relation(fields: [themeId], references: [id], onDelete: Restrict)
   skill         Skill?   @relation(fields: [skillId, themeId], references: [id, themeId], onDelete: Restrict)
   createdBy     User     @relation("QuestionVersionAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  options       QuestionOption[]
+  media         QuestionMedia[]
+  submissions   QuestionSubmission[]
+  publishedCopies Question[] @relation("PublishedVersionSource")
+  publicationSubmissions QuestionSubmission[] @relation("SubmissionPublishedVersion")
 
   @@unique([questionId, versionNumber])
   @@index([grade, difficulty])
   @@index([themeId, skillId])
   @@index([contentHash])
+}
+
+model QuestionOption {
+  id         String          @id @default(uuid()) @db.Uuid
+  versionId  String          @db.Uuid
+  stableId   String          @db.Uuid
+  text       String          @db.VarChar(500)
+  position   Int
+  isCorrect  Boolean         @default(false)
+  version    QuestionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, stableId])
+  @@unique([versionId, position])
+  @@index([versionId, isCorrect])
+}
+
+model QuestionMedia {
+  id          String            @id @default(uuid()) @db.Uuid
+  versionId   String            @db.Uuid
+  kind        QuestionMediaKind @default(IMAGE)
+  mimeType    String            @db.VarChar(80)
+  byteSize    Int
+  altText     String            @db.VarChar(300)
+  contentHash String            @db.Char(64)
+  bytes       Bytes             @db.ByteA
+  createdAt   DateTime          @default(now()) @db.Timestamptz(3)
+  version     QuestionVersion   @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, kind])
+  @@index([contentHash])
+}
+
+model QuestionSubmission {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  sourceVersionId    String                   @unique @db.Uuid
+  submitterId        String                   @db.Uuid
+  status             QuestionSubmissionStatus @default(SUBMITTED)
+  revision           Int                      @default(1)
+  reviewerId         String?                  @db.Uuid
+  decisionNote       String?                  @db.VarChar(1000)
+  publishedQuestionId String?                 @unique @db.Uuid
+  publishedVersionId String?                  @unique @db.Uuid
+  submittedAt        DateTime                 @default(now()) @db.Timestamptz(3)
+  reviewStartedAt    DateTime?                @db.Timestamptz(3)
+  decidedAt          DateTime?                @db.Timestamptz(3)
+  sourceVersion      QuestionVersion          @relation(fields: [sourceVersionId], references: [id], onDelete: Restrict)
+  submitter           User                     @relation("QuestionSubmitter", fields: [submitterId], references: [id], onDelete: Restrict)
+  reviewer            User?                    @relation("QuestionReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  publishedQuestion  Question?                 @relation("SubmissionPublishedQuestion", fields: [publishedQuestionId], references: [id], onDelete: Restrict)
+  publishedVersion   QuestionVersion?          @relation("SubmissionPublishedVersion", fields: [publishedVersionId], references: [id], onDelete: Restrict)
+
+  @@index([status, submittedAt])
+  @@index([submitterId, submittedAt])
+  @@index([reviewerId, decidedAt])
 }

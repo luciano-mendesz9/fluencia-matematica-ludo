@@ -77,6 +77,11 @@ export default async function globalSetup() {
     const staleSchoolIds = staleSchools.rows.map((row) => row.id);
     const staleMemberships = await pool.query('SELECT "id" FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [staleUserIds, staleSchoolIds]);
     const staleMembershipIds = staleMemberships.rows.map((row) => row.id);
+    await pool.query('DELETE FROM "QuestionSubmission" WHERE "submitterId" = ANY($1::uuid[]) OR "reviewerId" = ANY($1::uuid[])', [staleUserIds]);
+    await pool.query('DELETE FROM "QuestionMedia" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [staleUserIds]);
+    await pool.query('DELETE FROM "QuestionOption" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [staleUserIds]);
+    await pool.query('DELETE FROM "QuestionVersion" WHERE "questionId" IN (SELECT "id" FROM "Question" WHERE "sourceQuestionId" IS NOT NULL AND ("createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]) OR "sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[]))))', [staleUserIds]);
+    await pool.query('DELETE FROM "Question" WHERE "sourceQuestionId" IS NOT NULL AND ("createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]) OR "sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [staleUserIds]);
     await pool.query('DELETE FROM "QuestionVersion" WHERE "questionId" IN (SELECT "id" FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]))', [staleUserIds]);
     await pool.query('DELETE FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[])', [staleUserIds]);
     await pool.query(
@@ -135,6 +140,7 @@ export default async function globalSetup() {
       { code: authFixtures.schools.schoolB.code, className: authFixtures.people.classB },
     ]) {
       const academicYearId = randomUUID();
+      const classId = randomUUID();
       await pool.query(`
         INSERT INTO "AcademicYear" ("id", "schoolId", "year", "status", "revision", "createdAt", "updatedAt")
         VALUES ($1, $2, $3, 'ACTIVE', 1, NOW(), NOW())
@@ -142,7 +148,17 @@ export default async function globalSetup() {
       await pool.query(`
         INSERT INTO "ClassGroup" ("id", "schoolId", "academicYearId", "grade", "name", "normalizedName", "status", "revision", "createdAt", "updatedAt")
         VALUES ($1, $2, $3, 4, $4, $5, 'ACTIVE', 1, NOW(), NOW())
-      `, [randomUUID(), schoolId(fixture.code), academicYearId, fixture.className, fixture.className.toLocaleLowerCase("pt-BR")]);
+      `, [classId, schoolId(fixture.code), academicYearId, fixture.className, fixture.className.toLocaleLowerCase("pt-BR")]);
+      if (fixture.code === authFixtures.schools.schoolA.code) {
+        const membership = await pool.query(
+          'SELECT "id" FROM "SchoolMembership" WHERE "userId" = $1 AND "schoolId" = $2 AND "role" = \'TEACHER\'',
+          [userId(authFixtures.schools.teacherOne.email), schoolId(fixture.code)],
+        );
+        await pool.query(`
+          INSERT INTO "TeacherClassAssignment" ("id", "membershipId", "teacherId", "schoolId", "classId", "status", "startsAt", "revision", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, 'ACTIVE', NOW(), 1, NOW(), NOW())
+        `, [randomUUID(), membership.rows[0].id, userId(authFixtures.schools.teacherOne.email), schoolId(fixture.code), classId]);
+      }
     }
 
     const fixtureUsers = await pool.query(`
@@ -157,10 +173,17 @@ export default async function globalSetup() {
       ...cleanupEmails,
     ], [authFixtures.student.identifier, authFixtures.recovery.studentCode]]);
     const fixtureUserIds = fixtureUsers.rows.map((row) => row.id);
+    await pool.query('DELETE FROM "QuestionSubmission" WHERE "submitterId" = ANY($1::uuid[]) OR "reviewerId" = ANY($1::uuid[])', [fixtureUserIds]);
+    await pool.query('DELETE FROM "QuestionMedia" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [fixtureUserIds]);
+    await pool.query('DELETE FROM "QuestionOption" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [fixtureUserIds]);
+    await pool.query('DELETE FROM "QuestionVersion" WHERE "questionId" IN (SELECT "id" FROM "Question" WHERE "sourceQuestionId" IS NOT NULL AND ("createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]) OR "sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[]))))', [fixtureUserIds]);
+    await pool.query('DELETE FROM "Question" WHERE "sourceQuestionId" IS NOT NULL AND ("createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]) OR "sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [fixtureUserIds]);
     await pool.query('DELETE FROM "QuestionVersion" WHERE "questionId" IN (SELECT "id" FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[]))', [fixtureUserIds]);
     await pool.query('DELETE FROM "Question" WHERE "createdById" = ANY($1::uuid[]) OR "ownerId" = ANY($1::uuid[])', [fixtureUserIds]);
     await pool.query('DELETE FROM "Skill" WHERE "themeId" IN (SELECT "id" FROM "Theme" WHERE "normalizedName" = $1)', ['algebra fm-010 e2e']);
     await pool.query('DELETE FROM "Theme" WHERE "normalizedName" = $1', ['algebra fm-010 e2e']);
+    await pool.query('DELETE FROM "Skill" WHERE "themeId" IN (SELECT "id" FROM "Theme" WHERE "normalizedName" = $1)', ['algebra fm-011 e2e']);
+    await pool.query('DELETE FROM "Theme" WHERE "normalizedName" = $1', ['algebra fm-011 e2e']);
     await pool.query(
       'DELETE FROM "AuditEvent" WHERE "actorId" = ANY($1::uuid[]) OR "targetId" = ANY($2::text[])',
       [fixtureUserIds, fixtureUserIds],

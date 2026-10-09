@@ -23,3 +23,20 @@ export const questionFiltersSchema = z.object({
 });
 
 export const updateQuestionStatusSchema = z.object({ questionId: uuid, revision: z.coerce.number().int().positive(), status: z.enum(["ACTIVE", "ARCHIVED"]) });
+
+export const richQuestionScalarSchema = z.object({
+  grade: z.coerce.number().int().min(1).max(5),
+  difficulty: z.coerce.number().int().min(1).max(6),
+  themeId: uuid,
+  skillId: z.union([uuid, z.literal("")]).transform((value) => value || null),
+  statement: z.string().trim().min(5).max(2000),
+  answerType: z.enum(["MULTIPLE_CHOICE", "NUMERIC"]),
+  explanation: z.string().trim().max(2000).optional().transform((value) => value || null),
+  numericExpected: z.string().trim().max(40).optional().transform((value) => value || null),
+  removeMedia: z.literal("yes").optional().transform((value) => value === "yes"),
+});
+
+export const submitQuestionSchema = z.object({ versionId: uuid });
+export const startReviewSchema = z.object({ submissionId: uuid, revision: z.coerce.number().int().positive() });
+export const decideSubmissionSchema = startReviewSchema.extend({ decision: z.enum(["CHANGES_REQUESTED", "REJECTED", "APPROVED_PUBLISHED"]), note: z.string().trim().max(1000).optional() });
+export const previewAnswerSchema = z.object({ versionId: uuid, answer: z.string().trim().min(1).max(500) });
