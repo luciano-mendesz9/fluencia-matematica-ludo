@@ -72,3 +72,8 @@ eventos em meses distintos.
 Chegada exata, contador após retorno total, extra da máquina após 6, convivência de pinos, política
 determinística e fuso/empates são propostas. FM-016 pode construir regras parametrizadas; FM-018/019
 não são `prontas` até as decisões de alto impacto em [14](14-open-decisions.md).
+
+O motor FM-016 representa as quatro alternativas de OD-002 em `LudoRules` e publica um preset
+identificado como proposto. Chegada e convivência já alteram as transições do motor; jogada extra da
+máquina e contador de recuperação ficam persistíveis na mesma configuração para consumo pelas
+sessões futuras. Isso é suporte técnico às alternativas, não confirmação de produto.

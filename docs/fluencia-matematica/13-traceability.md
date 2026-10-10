@@ -7,7 +7,7 @@
 | questões/versionamento | BR-005–007 | 02,04 | FM-010–012 | ownership/versão/DTO sem gabarito | Q-01–06 + traces |
 | áudio/mídia | BR-005/019 | 03,08 | FM-011 | MIME/escopo/ordem | AUDIO-01 + revisão |
 | atividades/meta | BR-008–010/018 | 04,07 | FM-013–015 | cobertura/estado/transação | ACT-01–04 |
-| Ludo | BR-011–014 | 05 | FM-016–018,020 | turno/revisão/movimento | LUDO-01–13 + corrida |
+| Ludo | BR-011–014 | 05 | FM-016–018,020 | turno/revisão/movimento | FM-016: 23 testes unitários; LUDO-01–13 + corrida nas seguintes |
 | pontos/vitória | BR-015/016 | 05 | FM-019 | unique/transação | PTS-01–05 + ledger |
 | ranking | BR-017 | 06 | FM-021 | turma/mês servidor | RANK-01–04 |
 | analytics/feedback | BR-019/020 | 06 | FM-022 | consulta escopada/contexto | DATA-01–04 + reconciliação |

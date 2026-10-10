@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createNeonTestPool } from "../helpers/neon-pool";
 import { throttleKey } from "../../src/server/auth/crypto";
 import { authFixtures } from "./auth-fixtures";
+import { cleanupActivityFixtures } from "./cleanup";
 
 export default async function globalTeardown() {
   const { pool } = createNeonTestPool();
@@ -28,6 +29,7 @@ export default async function globalTeardown() {
     const schoolIds = schools.rows.map((row) => row.id);
     const memberships = await pool.query('SELECT "id" FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [schoolUserIds, schoolIds]);
     const membershipIds = memberships.rows.map((row) => row.id);
+    await cleanupActivityFixtures(pool, schoolUserIds, schoolIds);
     await pool.query('DELETE FROM "QuestionSubmission" WHERE "submitterId" = ANY($1::uuid[]) OR "reviewerId" = ANY($1::uuid[])', [schoolUserIds]);
     await pool.query('DELETE FROM "QuestionMedia" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [schoolUserIds]);
     await pool.query('DELETE FROM "QuestionOption" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [schoolUserIds]);
@@ -61,6 +63,7 @@ export default async function globalTeardown() {
       ...cleanupEmails,
     ], [authFixtures.student.identifier, authFixtures.recovery.studentCode]]);
     const fixtureUserIds = fixtureUsers.rows.map((row) => row.id);
+    await cleanupActivityFixtures(pool, fixtureUserIds, []);
     await pool.query('DELETE FROM "QuestionSubmission" WHERE "submitterId" = ANY($1::uuid[]) OR "reviewerId" = ANY($1::uuid[])', [fixtureUserIds]);
     await pool.query('DELETE FROM "QuestionMedia" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [fixtureUserIds]);
     await pool.query('DELETE FROM "QuestionOption" WHERE "versionId" IN (SELECT qv."id" FROM "QuestionVersion" qv JOIN "Question" q ON q.id=qv."questionId" WHERE q."createdById" = ANY($1::uuid[]) OR q."ownerId" = ANY($1::uuid[]) OR q."sourceQuestionId" IN (SELECT source."id" FROM "Question" source WHERE source."createdById" = ANY($1::uuid[]) OR source."ownerId" = ANY($1::uuid[])))', [fixtureUserIds]);
