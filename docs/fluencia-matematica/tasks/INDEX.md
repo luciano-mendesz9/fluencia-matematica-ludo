@@ -2,9 +2,9 @@
 
 Estado em 10/10/2026: FM-001–FM-015 estão **integradas** em `origin/main`; FM-013, FM-014 e FM-015
 entraram pela PR #7 (`5fa7ffc`), após validação da migration no ambiente de desenvolvimento,
-PostgreSQL e Chromium. FM-016 está **implementada e verificada localmente**, com publicação pendente
-nesta atualização. FM-017–027 permanecem **planejadas**. Branch base de integração: `main`, publicada
-em `origin/main`.
+PostgreSQL e Chromium. FM-016 está **implementada, verificada e publicada** na branch
+`task/FM-016-ludo-domain-engine`; ainda não foi integrada. FM-017–027 permanecem **planejadas**.
+Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |

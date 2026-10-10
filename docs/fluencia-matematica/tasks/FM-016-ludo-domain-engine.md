@@ -1,6 +1,6 @@
 # FM-016 — Motor de domínio do Ludo
 
-**Ordem/fase:** 16/Jogo | **Branch:** `task/FM-016-ludo-domain-engine` | **Situação:** implementada e verificada localmente
+**Ordem/fase:** 16/Jogo | **Branch:** `task/FM-016-ludo-domain-engine` | **Situação:** implementada, verificada e publicada
 
 ## Objetivo/independência
 
