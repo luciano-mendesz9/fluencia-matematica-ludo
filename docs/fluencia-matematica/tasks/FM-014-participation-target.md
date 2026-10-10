@@ -1,6 +1,6 @@
 # FM-014 — Participação, meta e prática adicional
 
-**Ordem/fase:** 14/Atividade | **Branch:** `task/FM-014-participation-target` | **Situação:** planejada
+**Ordem/fase:** 14/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada localmente
 
 ## Objetivo/decisão
 
