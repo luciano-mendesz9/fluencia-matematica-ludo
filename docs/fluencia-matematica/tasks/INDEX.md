@@ -1,9 +1,10 @@
 # Índice ordenado de tarefas
 
-Estado em 09/10/2026: FM-001–FM-010 estão **integradas** em `origin/main`. FM-011 e FM-012 estão
-**verificadas e publicadas** em uma branch combinada autorizada, com PostgreSQL e Chromium, mas ainda
-não foram integradas. FM-013–027 permanecem **planejadas**; dependências exigem integração na
-base, não apenas verificação em branch. Branch base de integração: `main`, publicada em `origin/main`.
+Estado em 10/10/2026: FM-001–FM-012 estão **integradas** em `origin/main`. FM-013, FM-014 e FM-015
+estão **implementadas, verificadas e publicadas** juntas na branch
+`task/FM-013-FM-014-FM-015-activity-lifecycle`, com migration aplicada no ambiente de desenvolvimento,
+PostgreSQL e Chromium; ainda não foram integradas. FM-016–027 permanecem
+**planejadas**. Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
 | ---: | --- | --- | --- | --- | --- |
@@ -19,9 +20,9 @@ base, não apenas verificação em branch. Branch base de integração: `main`, 
 | 10 | [FM-010](FM-010-question-bank.md) | Conteúdo: banco e versões | 008,009 | `task/FM-010-question-bank` | ownership/versionamento |
 | 11 | [FM-011](FM-011-question-editor-media.md) | Conteúdo: editor/correção/áudio | 010 | `task/FM-011-FM-012-question-editor-semed-sharing` | prévia fiel e DTO sem gabarito |
 | 12 | [FM-012](FM-012-semed-sharing.md) | Conteúdo: envio/revisão SEMED | 011 | `task/FM-011-FM-012-question-editor-semed-sharing` | cópia rastreável |
-| 13 | [FM-013](FM-013-activity-authoring.md) | Atividade: criação/cobertura | 011 | `task/FM-013-activity-authoring` | versões fixas e dificuldades 1–6 |
-| 14 | [FM-014](FM-014-participation-target.md) | Atividade: aluno/meta/prática extra | 013 | `task/FM-014-participation-target` | meta persiste entre partidas |
-| 15 | [FM-015](FM-015-activity-lifecycle.md) | Atividade: abrir/fechar/concorrência | 014 | `task/FM-015-activity-lifecycle` | corrida definida e auditada |
+| 13 | [FM-013](FM-013-activity-authoring.md) | Atividade: criação/cobertura | 011 | `task/FM-013-FM-014-FM-015-activity-lifecycle` | versões fixas e dificuldades 1–6 |
+| 14 | [FM-014](FM-014-participation-target.md) | Atividade: aluno/meta/prática extra | 013 | `task/FM-013-FM-014-FM-015-activity-lifecycle` | meta persiste entre partidas |
+| 15 | [FM-015](FM-015-activity-lifecycle.md) | Atividade: abrir/fechar/concorrência | 014 | `task/FM-013-FM-014-FM-015-activity-lifecycle` | corrida definida e auditada |
 | 16 | [FM-016](FM-016-ludo-domain-engine.md) | Jogo: tabuleiro/movimentos/máquina | 001 | `task/FM-016-ludo-domain-engine` | motor puro determinístico |
 | 17 | [FM-017](FM-017-game-session-turns.md) | Jogo: sessão/dado/turnos/desafio | 003,015,016 | `task/FM-017-game-session-turns` | servidor controla estado |
 | 18 | [FM-018](FM-018-answer-move-recovery.md) | Jogo: resposta/movimento/recuperação | 011,017 | `task/FM-018-answer-move-recovery` | atomicidade e regra completa |

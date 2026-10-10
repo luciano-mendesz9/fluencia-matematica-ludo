@@ -85,6 +85,17 @@ enum QuestionSubmissionStatus {
   APPROVED_PUBLISHED
 }
 
+enum ActivityStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum AcceptedAnswerOutcome {
+  CORRECT
+  INCORRECT
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -110,6 +121,8 @@ model User {
   questionVersions    QuestionVersion[] @relation("QuestionVersionAuthor")
   questionSubmissions QuestionSubmission[] @relation("QuestionSubmitter")
   questionReviews     QuestionSubmission[] @relation("QuestionReviewer")
+  createdActivities   Activity[] @relation("ActivityTeacher")
+  activityParticipations ActivityParticipation[] @relation("ActivityStudent")
 
   @@index([status])
 }
@@ -127,6 +140,7 @@ model School {
   classGroups   ClassGroup[]
   enrollments   Enrollment[]
   teacherAssignments TeacherClassAssignment[]
+  activities     Activity[]
 
   @@index([status, name])
 }
@@ -162,6 +176,7 @@ model ClassGroup {
   academicYear   AcademicYear     @relation(fields: [academicYearId, schoolId], references: [id, schoolId], onDelete: Restrict)
   enrollments    Enrollment[]
   teacherAssignments TeacherClassAssignment[]
+  activities       Activity[]
 
   @@unique([id, schoolId])
   @@unique([schoolId, academicYearId, normalizedName])
@@ -182,6 +197,7 @@ model Enrollment {
   student   User             @relation(fields: [studentId], references: [id], onDelete: Restrict)
   school    School           @relation(fields: [schoolId], references: [id], onDelete: Restrict)
   classGroup ClassGroup      @relation(fields: [classId, schoolId], references: [id, schoolId], onDelete: Restrict)
+  activityParticipations ActivityParticipation[]
 
   @@index([studentId, status, startsAt, endsAt])
   @@index([schoolId, status, classId, startsAt])
@@ -367,6 +383,7 @@ model QuestionVersion {
   submissions   QuestionSubmission[]
   publishedCopies Question[] @relation("PublishedVersionSource")
   publicationSubmissions QuestionSubmission[] @relation("SubmissionPublishedVersion")
+  activitySelections ActivityQuestionVersion[]
 
   @@unique([questionId, versionNumber])
   @@index([grade, difficulty])
@@ -426,4 +443,76 @@ model QuestionSubmission {
   @@index([status, submittedAt])
   @@index([submitterId, submittedAt])
   @@index([reviewerId, decidedAt])
+}
+
+model Activity {
+  id            String         @id @default(uuid()) @db.Uuid
+  schoolId      String         @db.Uuid
+  classId       String         @db.Uuid
+  teacherId     String         @db.Uuid
+  title         String         @db.VarChar(160)
+  instructions  String?        @db.VarChar(1000)
+  targetCount   Int
+  status        ActivityStatus @default(DRAFT)
+  revision      Int            @default(1)
+  openedAt      DateTime?      @db.Timestamptz(3)
+  closedAt      DateTime?      @db.Timestamptz(3)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Restrict)
+  classGroup    ClassGroup     @relation(fields: [classId, schoolId], references: [id, schoolId], onDelete: Restrict)
+  teacher       User           @relation("ActivityTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  questionVersions ActivityQuestionVersion[]
+  participations ActivityParticipation[]
+
+  @@index([teacherId, schoolId, status, createdAt])
+  @@index([classId, status, openedAt])
+}
+
+model ActivityQuestionVersion {
+  activityId       String @db.Uuid
+  questionVersionId String @db.Uuid
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  activity         Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  questionVersion  QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+
+  @@id([activityId, questionVersionId])
+  @@index([questionVersionId])
+}
+
+model ActivityParticipation {
+  id               String   @id @default(uuid()) @db.Uuid
+  activityId       String   @db.Uuid
+  enrollmentId     String   @db.Uuid
+  studentId        String   @db.Uuid
+  acceptedAnswers  Int      @default(0)
+  correctAnswers   Int      @default(0)
+  incorrectAnswers Int      @default(0)
+  extraAnswers     Int      @default(0)
+  targetReachedAt  DateTime? @db.Timestamptz(3)
+  revision         Int      @default(1)
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+  activity         Activity @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  enrollment       Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  student          User @relation("ActivityStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  answerReceipts   ActivityAnswerReceipt[]
+
+  @@unique([activityId, studentId])
+  @@index([studentId, createdAt])
+  @@index([enrollmentId])
+}
+
+model ActivityAnswerReceipt {
+  id              String   @id @default(uuid()) @db.Uuid
+  participationId String   @db.Uuid
+  clientActionId  String   @db.Uuid
+  outcome         AcceptedAnswerOutcome
+  acceptedNumber  Int
+  isExtra         Boolean
+  acceptedAt      DateTime @default(now()) @db.Timestamptz(3)
+  participation   ActivityParticipation @relation(fields: [participationId], references: [id], onDelete: Restrict)
+
+  @@unique([participationId, clientActionId])
+  @@index([participationId, acceptedAt])
 }
