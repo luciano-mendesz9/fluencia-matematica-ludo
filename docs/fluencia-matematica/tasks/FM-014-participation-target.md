@@ -1,6 +1,6 @@
 # FM-014 — Participação, meta e prática adicional
 
-**Ordem/fase:** 14/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada localmente
+**Ordem/fase:** 14/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada e publicada
 
 ## Objetivo/decisão
 

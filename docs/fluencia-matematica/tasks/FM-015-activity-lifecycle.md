@@ -1,6 +1,6 @@
 # FM-015 — Abertura, fechamento e disputa com respostas
 
-**Ordem/fase:** 15/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada localmente
+**Ordem/fase:** 15/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada e publicada
 
 ## Objetivo
 

@@ -1,6 +1,6 @@
 # FM-013 — Criação e cobertura de atividades
 
-**Ordem/fase:** 13/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada localmente
+**Ordem/fase:** 13/Atividade | **Branch conjunta:** `task/FM-013-FM-014-FM-015-activity-lifecycle` | **Situação:** verificada e publicada
 
 ## Objetivo/dependências
 

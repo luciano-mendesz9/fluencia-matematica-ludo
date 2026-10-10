@@ -1,9 +1,9 @@
 # Índice ordenado de tarefas
 
 Estado em 10/10/2026: FM-001–FM-012 estão **integradas** em `origin/main`. FM-013, FM-014 e FM-015
-estão **implementadas e verificadas** juntas na branch local
+estão **implementadas, verificadas e publicadas** juntas na branch
 `task/FM-013-FM-014-FM-015-activity-lifecycle`, com migration aplicada no ambiente de desenvolvimento,
-PostgreSQL e Chromium; ainda não foram commitadas, publicadas ou integradas. FM-016–027 permanecem
+PostgreSQL e Chromium; ainda não foram integradas. FM-016–027 permanecem
 **planejadas**. Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
