@@ -77,3 +77,10 @@ O motor FM-016 representa as quatro alternativas de OD-002 em `LudoRules` e publ
 identificado como proposto. Chegada e convivência já alteram as transições do motor; jogada extra da
 máquina e contador de recuperação ficam persistíveis na mesma configuração para consumo pelas
 sessões futuras. Isso é suporte técnico às alternativas, não confirmação de produto.
+
+## Estado implementado até FM-017
+
+A sessão persiste o preset proposto junto do estado dos oito pinos e da revisão. O servidor controla
+RNG, primeira saída, turno automático da máquina e criação de desafio com versão fixa; retry da mesma
+ação devolve o resultado original. O prompt público contém apenas enunciado, tipo, alternativas e
+mídia autorizada. Correção, movimento após acerto/erro e pontos ainda pertencem a FM-018/019.

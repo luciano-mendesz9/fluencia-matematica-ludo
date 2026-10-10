@@ -17,6 +17,32 @@ export async function cleanupActivityFixtures(
   const activityIds = activities.rows.map((row) => row.id);
 
   await pool.query(
+    `DELETE FROM "GameAction" WHERE "gameId" IN (
+      SELECT "id" FROM "GameSession" WHERE "participationId" IN (
+        SELECT "id" FROM "ActivityParticipation"
+         WHERE "activityId" = ANY($1::uuid[]) OR "studentId" = ANY($2::uuid[])
+      )
+    )`,
+    [activityIds, userIds],
+  );
+  await pool.query(
+    `DELETE FROM "GameChallenge" WHERE "gameId" IN (
+      SELECT "id" FROM "GameSession" WHERE "participationId" IN (
+        SELECT "id" FROM "ActivityParticipation"
+         WHERE "activityId" = ANY($1::uuid[]) OR "studentId" = ANY($2::uuid[])
+      )
+    )`,
+    [activityIds, userIds],
+  );
+  await pool.query(
+    `DELETE FROM "GameSession" WHERE "participationId" IN (
+      SELECT "id" FROM "ActivityParticipation"
+       WHERE "activityId" = ANY($1::uuid[]) OR "studentId" = ANY($2::uuid[])
+    )`,
+    [activityIds, userIds],
+  );
+
+  await pool.query(
     `DELETE FROM "ActivityAnswerReceipt"
       WHERE "participationId" IN (
         SELECT "id" FROM "ActivityParticipation"

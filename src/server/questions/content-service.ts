@@ -159,9 +159,30 @@ export async function correctPreviewAnswer(input: { actor: AuthenticatedPrincipa
 }
 
 export async function getAuthorizedMedia(input: { actor: AuthenticatedPrincipal; mediaId: string }) {
-  await assertQuestionAuthor(input.actor); uuid(input.mediaId, "Mídia inválida.");
-  const visibility = input.actor.globalRole === "SEMED_ADMIN" ? [{ origin: "SEMED" as const }, { origin: "PRIVATE" as const, versions: { some: { submissions: { some: {} } } } }] : [{ origin: "SEMED" as const }, { origin: "PRIVATE" as const, ownerId: input.actor.id }];
-  const authorized = await prisma.questionMedia.findFirst({ where: { id: input.mediaId, version: { question: { OR: visibility } } }, select: { id: true } });
+  uuid(input.mediaId, "Mídia inválida.");
+  const authorized = input.actor.studentCode && !input.actor.globalRole
+    ? await (async () => {
+      const now = new Date();
+      const candidate = await prisma.questionMedia.findFirst({
+        where: {
+          id: input.mediaId,
+          version: { gameChallenges: { some: { status: "PENDING", game: { status: "ACTIVE", participation: { studentId: input.actor.id, student: { status: "ACTIVE", studentCode: { not: null }, globalRole: null }, activity: { status: "OPEN" }, enrollment: { studentId: input.actor.id, status: "ACTIVE", startsAt: { lte: now }, OR: [{ endsAt: null }, { endsAt: { gt: now } }] } } } } } },
+        },
+        select: {
+          id: true,
+          version: { select: { gameChallenges: { where: { status: "PENDING", game: { status: "ACTIVE", participation: { studentId: input.actor.id } } }, select: { game: { select: { participation: { select: { studentId: true, activity: { select: { schoolId: true, classId: true } }, enrollment: { select: { studentId: true, schoolId: true, classId: true } } } } } } } } } },
+        },
+      });
+      return candidate?.version.gameChallenges.some(({ game: { participation } }) =>
+        participation.studentId === input.actor.id && participation.enrollment.studentId === input.actor.id &&
+        participation.enrollment.schoolId === participation.activity.schoolId && participation.enrollment.classId === participation.activity.classId,
+      ) ? { id: candidate.id } : null;
+    })()
+    : await (async () => {
+      await assertQuestionAuthor(input.actor);
+      const visibility = input.actor.globalRole === "SEMED_ADMIN" ? [{ origin: "SEMED" as const }, { origin: "PRIVATE" as const, versions: { some: { submissions: { some: {} } } } }] : [{ origin: "SEMED" as const }, { origin: "PRIVATE" as const, ownerId: input.actor.id }];
+      return prisma.questionMedia.findFirst({ where: { id: input.mediaId, version: { question: { OR: visibility } } }, select: { id: true } });
+    })();
   if (!authorized) throw new AuthorizationError("NOT_FOUND", "Mídia não encontrada.");
   const media = await questionMediaStore.readImage(authorized.id);
   if (!media) throw new AuthorizationError("NOT_FOUND", "Mídia não encontrada.");

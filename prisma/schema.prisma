@@ -96,6 +96,37 @@ enum AcceptedAnswerOutcome {
   INCORRECT
 }
 
+enum GameSessionStatus {
+  ACTIVE
+  SUSPENDED
+  FINISHED
+}
+
+enum GamePhase {
+  WAITING_FIRST_EXIT
+  STUDENT_ROLL
+  CHALLENGE_PENDING
+  MOVE_PENDING
+  RECOVERY_ROLL
+  RECOVERY_RELEASE
+  FINISHED
+}
+
+enum GameTurn {
+  STUDENT
+  MACHINE
+}
+
+enum GameActionType {
+  ROLL
+}
+
+enum ChallengeStatus {
+  PENDING
+  ANSWERED
+  CANCELLED
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -384,6 +415,7 @@ model QuestionVersion {
   publishedCopies Question[] @relation("PublishedVersionSource")
   publicationSubmissions QuestionSubmission[] @relation("SubmissionPublishedVersion")
   activitySelections ActivityQuestionVersion[]
+  gameChallenges GameChallenge[]
 
   @@unique([questionId, versionNumber])
   @@index([grade, difficulty])
@@ -497,6 +529,7 @@ model ActivityParticipation {
   enrollment       Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
   student          User @relation("ActivityStudent", fields: [studentId], references: [id], onDelete: Restrict)
   answerReceipts   ActivityAnswerReceipt[]
+  gameSessions     GameSession[]
 
   @@unique([activityId, studentId])
   @@index([studentId, createdAt])
@@ -515,4 +548,60 @@ model ActivityAnswerReceipt {
 
   @@unique([participationId, clientActionId])
   @@index([participationId, acceptedAt])
+}
+
+model GameSession {
+  id                    String            @id @default(uuid()) @db.Uuid
+  participationId       String            @db.Uuid
+  status                GameSessionStatus @default(ACTIVE)
+  phase                 GamePhase         @default(WAITING_FIRST_EXIT)
+  turn                  GameTurn          @default(STUDENT)
+  boardVersion          String            @db.VarChar(80)
+  rules                 Json              @db.JsonB
+  pieces                Json              @db.JsonB
+  revision              Int               @default(1)
+  errorCount            Int               @default(0)
+  lastQuestionVersionId String?           @db.Uuid
+  startedAt             DateTime          @default(now()) @db.Timestamptz(3)
+  suspendedAt           DateTime?         @db.Timestamptz(3)
+  finishedAt            DateTime?         @db.Timestamptz(3)
+  updatedAt             DateTime          @updatedAt @db.Timestamptz(3)
+  participation         ActivityParticipation @relation(fields: [participationId], references: [id], onDelete: Restrict)
+  actions               GameAction[]
+  challenges            GameChallenge[]
+
+  @@index([participationId, status, startedAt])
+  @@index([status, updatedAt])
+}
+
+model GameAction {
+  id               String         @id @default(uuid()) @db.Uuid
+  gameId           String         @db.Uuid
+  clientActionId   String         @db.Uuid
+  type             GameActionType
+  expectedRevision Int
+  result           Json           @db.JsonB
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  game             GameSession    @relation(fields: [gameId], references: [id], onDelete: Restrict)
+
+  @@unique([gameId, clientActionId])
+  @@index([gameId, createdAt])
+}
+
+model GameChallenge {
+  id                String          @id @default(uuid()) @db.Uuid
+  gameId            String          @db.Uuid
+  questionVersionId String          @db.Uuid
+  difficulty        Int
+  dice              Int
+  status            ChallengeStatus @default(PENDING)
+  isRepeated        Boolean         @default(false)
+  sessionRevision   Int
+  presentedAt       DateTime        @default(now()) @db.Timestamptz(3)
+  answeredAt        DateTime?       @db.Timestamptz(3)
+  game              GameSession     @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  questionVersion   QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+
+  @@index([gameId, presentedAt])
+  @@index([questionVersionId])
 }
