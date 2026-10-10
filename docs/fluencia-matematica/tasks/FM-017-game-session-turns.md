@@ -1,6 +1,6 @@
 # FM-017 — Sessão, dado, turnos e criação de desafio
 
-**Ordem/fase:** 17/Jogo | **Branch:** `task/FM-017-game-session-turns` | **Situação:** planejada
+**Ordem/fase:** 17/Jogo | **Branch:** `task/FM-017-game-session-turns` | **Situação:** implementada e verificada; não publicada/integrada
 
 ## Objetivo/dependências
 
@@ -26,3 +26,17 @@ Integração com RNG injetado: retries, duas abas, sem movimento, conteúdo esgo
 e vínculo revogado; Route Handler/Action direto adulterado. Playwright mínimo do início até desafio,
 sem UI final. Aceite: payload nunca contém gabarito e dado não muda no retry. Relatório FM-017,
 migration e gates.
+
+## Implementação em 10/10/2026
+
+`GameSession`, `GameAction` e `GameChallenge` persistem tabuleiro/regras versionados, ações
+idempotentes e versões fixas de questão. Action e Route Handler reautenticam o aluno e o serviço
+revalida participação, matrícula, atividade, fase, turno e revisão sob locks. O dado usa RNG do
+servidor; campos decisórios extras do cliente são descartados. Fechamento e revogação suspendem a
+partida e cancelam desafios pendentes.
+
+O fluxo branco/azul no detalhe da atividade inicia ou retoma a partida, mostra pinos e lança o dado
+até um desafio allowlisted; resposta/movimento continuam deliberadamente na FM-018. Migration
+aplicada e reconciliada em `fluencia-matematica-development`; testes unitários, integração completa,
+build e Playwright Chromium específico aprovados. Evidências em
+[relatório FM-017](../reports/FM-017/2026-10-10-attempt-01.md).
