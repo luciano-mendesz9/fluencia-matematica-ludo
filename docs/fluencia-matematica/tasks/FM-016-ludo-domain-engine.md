@@ -1,6 +1,6 @@
 # FM-016 — Motor de domínio do Ludo
 
-**Ordem/fase:** 16/Jogo | **Branch:** `task/FM-016-ludo-domain-engine` | **Situação:** planejada
+**Ordem/fase:** 16/Jogo | **Branch:** `task/FM-016-ludo-domain-engine` | **Situação:** implementada, verificada e publicada
 
 ## Objetivo/independência
 
@@ -28,3 +28,11 @@ Testes de tabela e propriedades: todo movimento fica no mapa; captura/segura; co
 prioridade/empate; todos base/concluídos; estado imutável. Aceite: 100% das transições catalogadas
 com fixtures legíveis e nenhuma dependência React/Prisma. Gates FM-001. Relatório FM-016 e decisão
 OD-002 citada; não criar página para provar motor.
+
+## Implementação observada em 10/10/2026
+
+O motor puro está em `src/domain/ludo`, com definição de tabuleiro versionada, posições lógicas,
+validação de invariantes, movimentos legais, aplicação imutável, captura, vitória e escolha
+determinística da máquina. As alternativas de OD-002 são propriedades explícitas de `LudoRules`;
+o preset exportado mantém o nome `PROPOSED_MVP_*` para não promover propostas a decisões confirmadas.
+Fixtures e testes unitários catalogam as transições sem importar React, Next ou Prisma.
