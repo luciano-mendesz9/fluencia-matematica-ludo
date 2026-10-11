@@ -1,21 +1,14 @@
 import "server-only";
 
 import { summarizeAnalytics, type AnalyticsAnswer, type AnalyticsPolicy } from "@/src/domain/analytics";
+import type { ReportQuery } from "@/src/domain/reports";
+import { REPORT_MAX_PERIOD_DAYS } from "@/src/domain/reports";
 import { prisma } from "@/src/lib/prisma";
 import { AuthorizationError } from "@/src/server/auth/errors";
 import type { AuthenticatedPrincipal } from "@/src/server/auth/policies";
 import { isUuid } from "@/src/server/schools/management";
 
-export type AnalyticsFilters = {
-  schoolId?: string;
-  classId?: string;
-  activityId?: string;
-  studentId?: string;
-  skillId?: string;
-  difficulty?: number;
-  from?: Date;
-  to?: Date;
-};
+export type AnalyticsFilters = ReportQuery;
 
 const activeAt = (now: Date) => ({
   status: "ACTIVE" as const,
@@ -48,6 +41,9 @@ function validateFilters(filters: AnalyticsFilters) {
   if (filters.from && Number.isNaN(filters.from.getTime())) throw new AuthorizationError("VALIDATION", "Data inicial inválida.");
   if (filters.to && Number.isNaN(filters.to.getTime())) throw new AuthorizationError("VALIDATION", "Data final inválida.");
   if (filters.from && filters.to && filters.from >= filters.to) throw new AuthorizationError("VALIDATION", "A data final deve ser posterior à inicial.");
+  if (filters.from && filters.to && filters.to.getTime() - filters.from.getTime() > REPORT_MAX_PERIOD_DAYS * 86_400_000) {
+    throw new AuthorizationError("VALIDATION", `O período máximo do relatório é de ${REPORT_MAX_PERIOD_DAYS} dias.`);
+  }
 }
 
 async function authorizedScope(input: { actor: AuthenticatedPrincipal; filters: AnalyticsFilters; now: Date }) {
@@ -192,6 +188,20 @@ export async function getAuthorizedAnalytics(input: {
     select: { id: true, name: true, theme: { select: { name: true } } },
     orderBy: [{ theme: { name: "asc" } }, { name: "asc" }],
   });
+  const pointAggregate = classIds.length && activityIds.length ? await prisma.pointEvent.aggregate({
+    where: {
+      classId: { in: classIds },
+      activityId: { in: activityIds },
+      ...(input.filters.studentId ? { studentId: input.filters.studentId } : {}),
+      ...(input.filters.from || input.filters.to ? { awardedAt: { ...(input.filters.from ? { gte: input.filters.from } : {}), ...(input.filters.to ? { lt: input.filters.to } : {}) } } : {}),
+      ...(input.filters.difficulty || input.filters.skillId ? { answerAttempt: { is: { challenge: {
+        ...(input.filters.difficulty ? { difficulty: input.filters.difficulty } : {}),
+        ...(input.filters.skillId ? { questionVersion: { skillId: input.filters.skillId } } : {}),
+      } } } } : {}),
+    },
+    _count: true,
+    _sum: { amount: true },
+  }) : null;
 
   return {
     scope: scope.kind,
@@ -203,6 +213,7 @@ export async function getAuthorizedAnalytics(input: {
       students: participations.map((item) => ({ id: item.studentId, name: item.student.name })).filter((item, index, all) => all.findIndex((other) => other.id === item.id) === index),
       skills,
     },
+    points: { events: pointAggregate?._count ?? 0, total: pointAggregate?._sum.amount ?? 0 },
     ...analytics,
   };
 }

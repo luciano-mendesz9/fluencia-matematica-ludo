@@ -5,11 +5,11 @@
 | OD-001 confirmada | erro reduz prêmio futuro, nunca o saldo acumulado | FM-019 | responsável do produto, 10/10/2026 |
 | OD-002 confirmada | chegada exata; sem extra da máquina no 6; convivência própria; contador preservado ao voltar à base | FM-018–020 | responsável do produto, 10/10/2026 |
 | OD-003 parcial | matriz curricular série/habilidade/dificuldade e limiares | FM-010,013,022,027 | equipe pedagógica |
-| OD-004 alta | política municipal de privacidade, retenção, exclusão e grupos pequenos | FM-023,024,027 | município/jurídico |
+| OD-004 parcial | FM-024 sem expurgo; SEMED agregado; escola identifica apenas no escopo autorizado; política definitiva pendente | FM-027 | responsável do produto, 11/10/2026; município/jurídico |
 | OD-005 alta | provedores de e-mail, TTS e mídia/custos/SLA | FM-005,011,026 | produto/infra |
 | OD-006 confirmada | respostas aceitas certas e erradas contam na meta; progresso acumula entre partidas | FM-014 | responsável do produto, 09/10/2026 |
 | OD-007 confirmada | fuso America/Fortaleza, empate 1/1/3 e transferência sem reatribuição | FM-021 | responsável do produto, 10/10/2026 |
-| OD-008 média | campos exatos PDF/XLSX e formatos | FM-024 | usuários/pedagógico |
+| OD-008 confirmada | PDF com filtros/resumo/cobertura/alunos autorizados; XLSX Resumo/Cobertura/Alunos/Definições | FM-024 | responsável do produto, 11/10/2026 |
 | OD-009 média | tamanho da rede, simultaneidade, RPO/RTO | FM-026–027 | município/infra |
 | OD-010 parcial | ranking exibe nome e sobrenome completos; validação visual e dispositivos do piloto pendentes | FM-002,021,025,027 | responsável do produto, 10/10/2026 |
 
@@ -36,8 +36,27 @@ A FM-023 registrou o ponto de extensão técnico, mas não tomou uma decisão mu
   alvo, escola, correlação, estados ou data do evento;
 - qualquer janela de retenção ou rotina de expurgo depende de política explícita do município/jurídico.
 
-Assim, retenção continua aberta para FM-024 e FM-027; a ausência da decisão opera de forma
-fail-closed, sem apagar evidências silenciosamente.
+Para a FM-024, o responsável do produto confirmou em 11/10/2026:
+
+- não há expurgo automático enquanto não existir política municipal;
+- SEMED exporta somente dados agregados, sem nomes de alunos;
+- professor e coordenador exportam alunos identificados apenas nas escolas/turmas autorizadas;
+- senha, hash, token, código de acesso e histórico de ranking nunca entram no relatório.
+
+A política municipal definitiva de retenção, exclusão e grupos pequenos continua aberta para a
+FM-027; a ausência dessa decisão permanece fail-closed, sem apagar evidências silenciosamente.
+
+## OD-008 — formato das exportações
+
+Decisão confirmada pelo responsável do produto em 11/10/2026 para a FM-024:
+
+- PDF inclui título, filtros, data/hora, resumo com numeradores e denominadores, cobertura por
+  habilidade/dificuldade, resultados individuais quando o papel permitir, definições e notas;
+- XLSX contém as abas `Resumo`, `Cobertura`, `Alunos` e `Definições`, preservando números e datas;
+- a aba `Alunos` informa a restrição de privacidade no escopo municipal agregado;
+- qualquer texto iniciado por `=`, `+`, `-` ou `@`, inclusive após espaços ou controles iniciais,
+  é prefixado para não ser interpretado como fórmula;
+- pontos aparecem como dimensão separada da precisão e usam o mesmo recorte autorizado.
 
 ## OD-006 — meta e feedback ao professor
 

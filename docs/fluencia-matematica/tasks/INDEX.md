@@ -6,9 +6,9 @@ estão **verificadas e publicadas** no checkpoint encadeado `task/FM-018-answer-
 (`dcd314e`). FM-021 está **verificada e publicada** em `task/FM-021-monthly-ranking`.
 FM-017–021 estão integradas em `origin/main` (`289174f`). FM-022 está **integrada** em `origin/main`
 pela PR #13 (`66ea7b8`); a validação pedagógica dos limiares da OD-003 permanece pendente. FM-023
-está **implementada, verificada tecnicamente e publicada** em
-`task/FM-023-audit-technical-operations`, com integração pendente. FM-024–027 permanecem
-**planejadas**.
+está **integrada** em `origin/main` pela PR #14 (`5ba1660`). FM-024 está **implementada e publicada,
+com gates focados aprovados e regressões amplas preexistentes registradas** em
+`task/FM-024-pdf-xlsx-exports`; FM-025–027 permanecem **planejadas**.
 Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
