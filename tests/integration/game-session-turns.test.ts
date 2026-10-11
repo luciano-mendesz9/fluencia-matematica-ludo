@@ -8,7 +8,7 @@ import { hashPassword } from "../../src/server/auth/password";
 import type { AuthenticatedPrincipal } from "../../src/server/auth/policies";
 import { assertDatabaseMarker } from "../../src/server/database/marker";
 import { readDatabaseEnvironment } from "../../src/server/database/environment";
-import { getGameSession, rollGame, startOrResumeGame, type RandomInt } from "../../src/server/games/service";
+import { answerGame, getGameSession, moveGame, rollGame, startOrResumeGame, type RandomInt } from "../../src/server/games/service";
 import { getAuthorizedMedia } from "../../src/server/questions/content-service";
 
 const suffix = randomUUID();
@@ -49,7 +49,7 @@ describe.sequential("FM-017 persistent game sessions and turns", () => {
     const teacherRow = await prisma.user.create({ data: { name: "FM017 Professor", email: `teacher-${suffix}@example.invalid`, normalizedEmail: `teacher-${suffix}@example.invalid`, passwordHash } });
     teacher = { id: teacherRow.id, name: teacherRow.name, globalRole: null, studentCode: null };
     userIds.push(teacherRow.id);
-    const studentRows = await Promise.all(Array.from({ length: 3 }, (_, index) => prisma.user.create({
+    const studentRows = await Promise.all(Array.from({ length: 4 }, (_, index) => prisma.user.create({
       data: { name: `FM017 Aluno ${index + 1}`, studentCode: `FM017-${index + 1}-${suffix}`, passwordHash },
     })));
     students = studentRows.map((row) => ({ id: row.id, name: row.name, globalRole: null, studentCode: row.studentCode }));
@@ -109,9 +109,12 @@ describe.sequential("FM-017 persistent game sessions and turns", () => {
     if (activityId) {
       const games = await prisma.gameSession.findMany({ where: { participation: { activityId } }, select: { id: true } });
       const gameIds = games.map(({ id }) => id);
+      await prisma.pointEvent.deleteMany({ where: { gameId: { in: gameIds } } });
       await prisma.gameAction.deleteMany({ where: { gameId: { in: gameIds } } });
+      await prisma.answerAttempt.deleteMany({ where: { gameId: { in: gameIds } } });
       await prisma.gameChallenge.deleteMany({ where: { gameId: { in: gameIds } } });
       await prisma.gameSession.deleteMany({ where: { id: { in: gameIds } } });
+      await prisma.activityAnswerReceipt.deleteMany({ where: { participation: { activityId } } });
       await prisma.activityParticipation.deleteMany({ where: { activityId } });
       await prisma.activityQuestionVersion.deleteMany({ where: { activityId } });
       await prisma.activity.deleteMany({ where: { id: activityId } });
@@ -183,6 +186,48 @@ describe.sequential("FM-017 persistent game sessions and turns", () => {
     const unavailable = await rollGame({ actor: students[2]!, gameId: game.id, clientActionId: randomUUID(), expectedRevision: 2, randomInt: sequence(1, 0) });
     expect(unavailable).toMatchObject({ game: { challenge: null }, roll: { studentDice: 2, noChallengeReason: "CONTENT_UNAVAILABLE" } });
     await prisma.question.update({ where: { id: difficultyTwoQuestionId }, data: { status: "ACTIVE" } });
+  });
+
+  it("answers, recovers, moves and awards answer/victory points once under concurrency", async () => {
+    const game = await startOrResumeGame({ actor: students[3]!, activityId });
+    const released = await rollGame({ actor: students[3]!, gameId: game.id, clientActionId: randomUUID(), expectedRevision: game.revision, randomInt: sequence(5) });
+    const firstChallenge = await rollGame({ actor: students[3]!, gameId: game.id, clientActionId: randomUUID(), expectedRevision: released.game.revision, randomInt: sequence(0, 0) });
+    const wrongAction = randomUUID();
+    const wrong = await answerGame({ actor: students[3]!, gameId: game.id, challengeId: firstChallenge.game.challenge!.id, clientActionId: wrongAction, expectedRevision: firstChallenge.game.revision, response: "99" });
+    expect(wrong.game).toMatchObject({ phase: "RECOVERY_ROLL", errorCount: 1, points: { game: 0, activity: 0 }, feedback: { outcome: "INCORRECT", awardedPoints: 0 } });
+
+    const recovery = await rollGame({ actor: students[3]!, gameId: game.id, clientActionId: randomUUID(), expectedRevision: wrong.game.revision, randomInt: sequence(0, 0) });
+    const correctAction = randomUUID();
+    const correct = await answerGame({ actor: students[3]!, gameId: game.id, challengeId: recovery.game.challenge!.id, clientActionId: correctAction, expectedRevision: recovery.game.revision, response: "1" });
+    expect(correct.game).toMatchObject({ phase: "MOVE_PENDING", points: { game: 7, activity: 7 }, feedback: { outcome: "CORRECT", awardedPoints: 7 } });
+    expect(correct.game.legalMoves.map(({ pieceId }) => pieceId)).toContain("s1");
+    const moved = await moveGame({ actor: students[3]!, gameId: game.id, pieceId: "s1", clientActionId: randomUUID(), expectedRevision: correct.game.revision, randomInt: sequence(0) });
+    expect(moved.game).toMatchObject({ phase: "STUDENT_ROLL", errorCount: 0, points: { game: 7, activity: 7 } });
+    const retry = await answerGame({ actor: students[3]!, gameId: game.id, challengeId: recovery.game.challenge!.id, clientActionId: correctAction, expectedRevision: recovery.game.revision, response: "1" });
+    expect(retry).toMatchObject({ retried: true, game: { revision: correct.game.revision } });
+    expect(await prisma.answerAttempt.count({ where: { challengeId: recovery.game.challenge!.id } })).toBe(1);
+    expect(await prisma.pointEvent.count({ where: { gameId: game.id, type: "ANSWER_AWARD" } })).toBe(1);
+
+    const almostWon: PieceState[] = [
+      { id: "s1", player: "STUDENT", position: { kind: "TRACK", progress: 57 } },
+      { id: "s2", player: "STUDENT", position: { kind: "HOME" } },
+      { id: "s3", player: "STUDENT", position: { kind: "HOME" } },
+      { id: "s4", player: "STUDENT", position: { kind: "HOME" } },
+      ...Array.from({ length: 4 }, (_, index) => ({ id: `m${index + 1}`, player: "MACHINE" as const, position: { kind: "BASE" as const } })),
+    ];
+    await prisma.gameSession.update({ where: { id: game.id }, data: { pieces: almostWon as unknown as Prisma.InputJsonValue, phase: "STUDENT_ROLL" } });
+    const beforeWin = await getGameSession({ actor: students[3]!, gameId: game.id });
+    const winningChallenge = await rollGame({ actor: students[3]!, gameId: game.id, clientActionId: randomUUID(), expectedRevision: beforeWin.revision, randomInt: sequence(0, 0) });
+    const winningAnswer = await answerGame({ actor: students[3]!, gameId: game.id, challengeId: winningChallenge.game.challenge!.id, clientActionId: randomUUID(), expectedRevision: winningChallenge.game.revision, response: "1" });
+    const moves = await Promise.allSettled([
+      moveGame({ actor: students[3]!, gameId: game.id, pieceId: "s1", clientActionId: randomUUID(), expectedRevision: winningAnswer.game.revision }),
+      moveGame({ actor: students[3]!, gameId: game.id, pieceId: "s1", clientActionId: randomUUID(), expectedRevision: winningAnswer.game.revision }),
+    ]);
+    expect(moves.filter(({ status }) => status === "fulfilled")).toHaveLength(1);
+    const winner = moves.find(({ status }) => status === "fulfilled");
+    expect(winner?.status === "fulfilled" ? winner.value.game : null).toMatchObject({ status: "FINISHED", winner: "STUDENT", points: { game: 47, activity: 47 } });
+    expect(await prisma.pointEvent.count({ where: { gameId: game.id, type: "VICTORY_BONUS" } })).toBe(1);
+    expect((await prisma.pointEvent.aggregate({ where: { gameId: game.id }, _sum: { amount: true } }))._sum.amount).toBe(47);
   });
 
   it("suspends revoked and closed sessions and cancels pending challenges", async () => {

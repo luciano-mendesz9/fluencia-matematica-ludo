@@ -7,6 +7,7 @@ export type StudentActivitySummary = {
   correctAnswers: number;
   incorrectAnswers: number;
   extraAnswers: number;
+  pointsBalance: number;
   targetReachedAt: Date | null;
   activity: { id: string; title: string; targetCount: number; status: "OPEN" | "CLOSED"; classGroup: { name: string; grade: number } };
 };
@@ -34,7 +35,7 @@ export function StudentActivityCard({ item, prominent = false }: { item: Student
       <p className="mt-4 font-bold">{state === "Meta cumprida" ? "Meta cumprida! Você pode continuar praticando." : state === "Encerrada" ? "Seu progresso foi preservado." : remaining ? `Faltam ${remaining} desafios para completar sua missão.` : "Sua missão está pronta."}</p>
       <div className="mt-4 flex items-end justify-between gap-3"><span className="font-black">{progress} de {item.activity.targetCount} desafios</span><span className="text-sm font-black text-brand">{percentage}%</span></div>
       <div className="student-progress mt-2" role="progressbar" aria-label={`Meta de ${item.activity.title}`} aria-valuemin={0} aria-valuemax={item.activity.targetCount} aria-valuenow={progress}><span style={{ width: `${percentage}%` }} /></div>
-      {item.extraAnswers ? <p className="mt-2 text-sm text-muted">{item.extraAnswers} resposta(s) de prática adicional.</p> : null}
+      <p className="mt-2 text-sm text-muted">{item.pointsBalance} ponto(s) nesta atividade{item.extraAnswers ? ` · ${item.extraAnswers} resposta(s) adicional(is)` : ""}.</p>
       <Link href={`/aluno/atividades/${item.activity.id}`} className={`${prominent && item.activity.status === "OPEN" ? "student-primary" : "inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-white px-4 font-extrabold text-foreground hover:bg-blue-50 hover:text-brand"} mt-5 w-full`}><Icon name={item.activity.status === "OPEN" ? "play" : "eye"} className="size-[19px]" />{item.activity.status === "OPEN" ? item.acceptedAnswers ? "Continuar missão" : "Começar missão" : "Ver progresso"}</Link>
     </div>
   </article>;

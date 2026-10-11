@@ -1,6 +1,6 @@
 # FM-019 — Ledger de pontos e bônus de vitória
 
-**Ordem/fase:** 19/Jogo | **Branch:** `task/FM-019-points-victory` | **Situação:** planejada
+**Ordem/fase:** 19/Jogo | **Branch:** `task/FM-019-points-victory` | **Situação:** verificada e publicada na branch encadeada; integração pendente
 
 ## Objetivo/bloqueio
 

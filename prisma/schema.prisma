@@ -119,12 +119,24 @@ enum GameTurn {
 
 enum GameActionType {
   ROLL
+  ANSWER
+  MOVE
 }
 
 enum ChallengeStatus {
   PENDING
   ANSWERED
   CANCELLED
+}
+
+enum AnswerAttemptOutcome {
+  CORRECT
+  INCORRECT
+}
+
+enum PointEventType {
+  ANSWER_AWARD
+  VICTORY_BONUS
 }
 
 model User {
@@ -154,6 +166,7 @@ model User {
   questionReviews     QuestionSubmission[] @relation("QuestionReviewer")
   createdActivities   Activity[] @relation("ActivityTeacher")
   activityParticipations ActivityParticipation[] @relation("ActivityStudent")
+  pointEvents PointEvent[] @relation("PointStudent")
 
   @@index([status])
 }
@@ -208,6 +221,7 @@ model ClassGroup {
   enrollments    Enrollment[]
   teacherAssignments TeacherClassAssignment[]
   activities       Activity[]
+  pointEvents       PointEvent[]
 
   @@unique([id, schoolId])
   @@unique([schoolId, academicYearId, normalizedName])
@@ -496,6 +510,7 @@ model Activity {
   teacher       User           @relation("ActivityTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
   questionVersions ActivityQuestionVersion[]
   participations ActivityParticipation[]
+  pointEvents PointEvent[]
 
   @@index([teacherId, schoolId, status, createdAt])
   @@index([classId, status, openedAt])
@@ -521,6 +536,7 @@ model ActivityParticipation {
   correctAnswers   Int      @default(0)
   incorrectAnswers Int      @default(0)
   extraAnswers     Int      @default(0)
+  pointsBalance    Int      @default(0)
   targetReachedAt  DateTime? @db.Timestamptz(3)
   revision         Int      @default(1)
   createdAt        DateTime @default(now()) @db.Timestamptz(3)
@@ -529,6 +545,8 @@ model ActivityParticipation {
   enrollment       Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
   student          User @relation("ActivityStudent", fields: [studentId], references: [id], onDelete: Restrict)
   answerReceipts   ActivityAnswerReceipt[]
+  answerAttempts   AnswerAttempt[]
+  pointEvents      PointEvent[]
   gameSessions     GameSession[]
 
   @@unique([activityId, studentId])
@@ -561,6 +579,7 @@ model GameSession {
   pieces                Json              @db.JsonB
   revision              Int               @default(1)
   errorCount            Int               @default(0)
+  pointsEarned          Int               @default(0)
   lastQuestionVersionId String?           @db.Uuid
   startedAt             DateTime          @default(now()) @db.Timestamptz(3)
   suspendedAt           DateTime?         @db.Timestamptz(3)
@@ -569,6 +588,8 @@ model GameSession {
   participation         ActivityParticipation @relation(fields: [participationId], references: [id], onDelete: Restrict)
   actions               GameAction[]
   challenges            GameChallenge[]
+  answerAttempts        AnswerAttempt[]
+  pointEvents           PointEvent[]
 
   @@index([participationId, status, startedAt])
   @@index([status, updatedAt])
@@ -601,7 +622,51 @@ model GameChallenge {
   answeredAt        DateTime?       @db.Timestamptz(3)
   game              GameSession     @relation(fields: [gameId], references: [id], onDelete: Restrict)
   questionVersion   QuestionVersion @relation(fields: [questionVersionId], references: [id], onDelete: Restrict)
+  answerAttempt     AnswerAttempt?
 
   @@index([gameId, presentedAt])
   @@index([questionVersionId])
+}
+
+model AnswerAttempt {
+  id                String               @id @default(uuid()) @db.Uuid
+  challengeId       String               @unique @db.Uuid
+  gameId            String               @db.Uuid
+  participationId   String               @db.Uuid
+  clientActionId    String               @db.Uuid
+  response          Json                 @db.JsonB
+  outcome           AnswerAttemptOutcome
+  errorStreakBefore Int
+  acceptedAt        DateTime             @default(now()) @db.Timestamptz(3)
+  challenge         GameChallenge        @relation(fields: [challengeId], references: [id], onDelete: Restrict)
+  game              GameSession          @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  participation     ActivityParticipation @relation(fields: [participationId], references: [id], onDelete: Restrict)
+  pointEvent        PointEvent?
+
+  @@unique([gameId, clientActionId])
+  @@index([participationId, acceptedAt])
+  @@index([gameId, acceptedAt])
+}
+
+model PointEvent {
+  id              String         @id @default(uuid()) @db.Uuid
+  participationId String         @db.Uuid
+  studentId       String         @db.Uuid
+  classId         String         @db.Uuid
+  activityId      String         @db.Uuid
+  gameId          String         @db.Uuid
+  answerAttemptId String?        @unique @db.Uuid
+  type            PointEventType
+  amount          Int
+  awardedAt       DateTime       @default(now()) @db.Timestamptz(3)
+  participation   ActivityParticipation @relation(fields: [participationId], references: [id], onDelete: Restrict)
+  student         User           @relation("PointStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  classGroup      ClassGroup     @relation(fields: [classId], references: [id], onDelete: Restrict)
+  activity        Activity       @relation(fields: [activityId], references: [id], onDelete: Restrict)
+  game            GameSession    @relation(fields: [gameId], references: [id], onDelete: Restrict)
+  answerAttempt   AnswerAttempt? @relation(fields: [answerAttemptId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, classId, awardedAt])
+  @@index([participationId, awardedAt])
+  @@index([gameId, awardedAt])
 }

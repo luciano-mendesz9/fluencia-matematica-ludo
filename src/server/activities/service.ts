@@ -202,13 +202,13 @@ export async function recordAcceptedAnswer(input: { activityId: string; studentI
 
 export async function listStudentActivities(actor: AuthenticatedPrincipal) {
   if (!actor.studentCode || actor.globalRole) throw new AuthorizationError("FORBIDDEN", "Acesso exclusivo do aluno.");
-  return prisma.activityParticipation.findMany({ where: { studentId: actor.id, activity: { status: { in: ["OPEN", "CLOSED"] } } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } } } } }, orderBy: { activity: { openedAt: "desc" } } });
+  return prisma.activityParticipation.findMany({ where: { studentId: actor.id, activity: { status: { in: ["OPEN", "CLOSED"] } } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, pointsBalance: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } } } } }, orderBy: { activity: { openedAt: "desc" } } });
 }
 
 export async function getStudentActivity(input: { actor: AuthenticatedPrincipal; activityId: string }) {
   uuid(input.activityId, "Atividade inválida.");
   if (!input.actor.studentCode || input.actor.globalRole) throw new AuthorizationError("FORBIDDEN", "Acesso exclusivo do aluno.");
-  const participation = await prisma.activityParticipation.findUnique({ where: { activityId_studentId: { activityId: input.activityId, studentId: input.actor.id } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } } } } } });
+  const participation = await prisma.activityParticipation.findUnique({ where: { activityId_studentId: { activityId: input.activityId, studentId: input.actor.id } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, pointsBalance: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } } } } } });
   if (!participation) throw new AuthorizationError("NOT_FOUND", "Atividade não encontrada para este aluno.");
   return participation;
 }
