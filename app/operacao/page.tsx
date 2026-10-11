@@ -1,15 +1,18 @@
 import { AppShell } from "@/src/components/layout/app-shell";
-import { AreaDashboard } from "@/src/components/layout/area-dashboard";
 import { LogoutForm } from "@/src/features/auth/logout-form";
+import { OperationsDashboard } from "@/src/features/operations/operations-dashboard";
+import { technicalFiltersFromSearch } from "@/src/features/operations/filters";
 import { requireArea } from "@/src/server/auth/guard";
+import { getTechnicalOperations } from "@/src/server/operations/service";
 
 const navigation = [{ href: "/operacao", label: "Visão técnica" }];
 
-export default async function OperationsPage() {
+export default async function OperationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const session = await requireArea("operacao");
+  const result = await getTechnicalOperations({ actor: { ...session.user }, filters: technicalFiltersFromSearch(await searchParams) });
   return (
     <AppShell areaLabel="Operação" currentUserLabel={session.user.name} navigation={navigation} accountAction={<LogoutForm />} statusLabel="Sessão ativa">
-      <AreaDashboard eyebrow="Visão técnica" title={`Olá, ${session.user.name}.`} description="Área protegida para capacidades operacionais. Dados pedagógicos individuais e ações críticas não são expostos a este perfil." destinations={[{ href: "/operacao", title: "Estado da área", description: "O painel técnico completo será conectado na tarefa operacional correspondente; nenhuma métrica simulada é exibida.", icon: "gauge", action: "Você está aqui" }]} />
+      <OperationsDashboard result={result} basePath="/operacao" />
     </AppShell>
   );
 }

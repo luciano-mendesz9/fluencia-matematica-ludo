@@ -27,6 +27,18 @@ Decisão confirmada pelo responsável do produto em 08/10/2026 para FM-010 e FM-
 
 Permanece aberta para FM-022 e FM-027 a definição pedagógica dos limiares de domínio, agregações e comparações analíticas. Esta decisão parcial não constitui validação científica desses limiares.
 
+## OD-004 — retenção e exclusão
+
+A FM-023 registrou o ponto de extensão técnico, mas não tomou uma decisão municipal em 11/10/2026:
+
+- eventos de auditoria e logs operacionais não têm exclusão automática;
+- a remoção de uma conta pode apenas anonimizar a referência opcional do ator, sem alterar ação,
+  alvo, escola, correlação, estados ou data do evento;
+- qualquer janela de retenção ou rotina de expurgo depende de política explícita do município/jurídico.
+
+Assim, retenção continua aberta para FM-024 e FM-027; a ausência da decisão opera de forma
+fail-closed, sem apagar evidências silenciosamente.
+
 ## OD-006 — meta e feedback ao professor
 
 Decisão confirmada pelo responsável do produto em 09/10/2026 para FM-014:
