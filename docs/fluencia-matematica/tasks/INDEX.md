@@ -4,7 +4,9 @@ Estado em 11/10/2026: FM-001–FM-016 estão **integradas** em `origin/main`; FM
 (`fa5072d`). FM-017 está **verificada e publicada** em `task/FM-017-game-session-turns`; FM-018–020
 estão **verificadas e publicadas** no checkpoint encadeado `task/FM-018-answer-move-recovery`
 (`dcd314e`). FM-021 está **verificada e publicada** em `task/FM-021-monthly-ranking`.
-FM-017–021 ainda não estão integradas; FM-022–027 permanecem **planejadas**.
+FM-017–021 estão integradas em `origin/main` (`289174f`). FM-022 está **implementada, verificada
+tecnicamente e publicada** em `task/FM-022-pedagogical-analytics`; integração e validação pedagógica
+dos limiares da OD-003 permanecem pendentes. FM-023–027 permanecem **planejadas**.
 Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |

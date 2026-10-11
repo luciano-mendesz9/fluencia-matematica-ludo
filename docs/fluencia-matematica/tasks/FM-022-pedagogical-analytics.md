@@ -1,6 +1,6 @@
 # FM-022 — Indicadores, dashboards e feedbacks
 
-**Ordem/fase:** 22/Resultados | **Branch:** `task/FM-022-pedagogical-analytics` | **Situação:** planejada
+**Ordem/fase:** 22/Resultados | **Branch:** `task/FM-022-pedagogical-analytics` | **Situação:** implementada, verificada tecnicamente e publicada; integração e validação pedagógica dos limiares pendentes
 
 ## Objetivo/bloqueios
 
