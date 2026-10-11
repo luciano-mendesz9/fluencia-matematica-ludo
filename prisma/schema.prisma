@@ -667,6 +667,7 @@ model PointEvent {
   answerAttempt   AnswerAttempt? @relation(fields: [answerAttemptId], references: [id], onDelete: Restrict)
 
   @@index([studentId, classId, awardedAt])
+  @@index([classId, awardedAt, studentId])
   @@index([participationId, awardedAt])
   @@index([gameId, awardedAt])
 }

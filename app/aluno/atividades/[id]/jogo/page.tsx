@@ -9,7 +9,7 @@ import { AuthorizationError } from "@/src/server/auth/errors";
 import { requireArea } from "@/src/server/auth/guard";
 import { getLatestGameForActivity } from "@/src/server/games/service";
 
-const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }];
+const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }, { href: "/aluno/ranking", label: "Ranking" }];
 
 export default async function StudentGamePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireArea("aluno"); const { id } = await params; const actor = { ...session.user };

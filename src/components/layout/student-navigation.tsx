@@ -11,7 +11,8 @@ function current(pathname: string, href: string) {
 }
 
 function studentIcon(item: NavigationItem): IconName {
-  return item.href === "/aluno" ? "home" : "clipboard";
+  if (item.href === "/aluno") return "home";
+  return item.href === "/aluno/ranking" ? "star" : "clipboard";
 }
 
 export function StudentNavigation({ items, mobile = false }: { items: NavigationItem[]; mobile?: boolean }) {

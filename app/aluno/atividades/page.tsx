@@ -5,7 +5,7 @@ import { StudentActivityCard, type StudentActivitySummary } from "@/src/features
 import { requireArea } from "@/src/server/auth/guard";
 import { listStudentActivities } from "@/src/server/activities/service";
 
-const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }];
+const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }, { href: "/aluno/ranking", label: "Ranking" }];
 
 export default async function StudentActivitiesPage() {
   const session = await requireArea("aluno");
