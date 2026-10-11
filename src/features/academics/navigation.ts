@@ -4,4 +4,5 @@ export const schoolNavigation = [
   { href: "/escola/turmas", label: "Turmas" },
   { href: "/escola/alunos", label: "Alunos" },
   { href: "/escola/pessoas", label: "Pessoas" },
+  { href: "/escola/relatorios", label: "Resultados" },
 ];
