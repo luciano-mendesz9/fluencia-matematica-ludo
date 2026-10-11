@@ -163,20 +163,26 @@ export async function openActivity(input: { actor: AuthenticatedPrincipal; activ
 
 export async function closeActivity(input: { actor: AuthenticatedPrincipal; activityId: string; revision: number; correlationId?: string }) {
   uuid(input.activityId, "Atividade inválida."); validateRevision(input.revision);
-  try {
-    return await prisma.$transaction(async (tx) => {
-      const locked = await lockActivity(tx, input.activityId);
-      const activity = await teacherActivity(tx, input.actor, input.activityId);
-      if (locked.status !== "OPEN") throw new AuthorizationError("STATE_CONFLICT", "A atividade não está aberta.");
-      if (locked.revision !== input.revision) throw new AuthorizationError("STATE_CONFLICT", "A atividade foi alterada por outra operação.");
-      const now = new Date();
-      await tx.gameChallenge.updateMany({ where: { status: "PENDING", game: { participation: { activityId: activity.id } } }, data: { status: "CANCELLED", answeredAt: now } });
-      const suspendedGames = await tx.gameSession.updateMany({ where: { status: "ACTIVE", participation: { activityId: activity.id } }, data: { status: "SUSPENDED", suspendedAt: now, revision: { increment: 1 } } });
-      const closed = await tx.activity.update({ where: { id: activity.id }, data: { status: "CLOSED", closedAt: now, revision: { increment: 1 } }, select: { id: true, status: true, revision: true, closedAt: true } });
-      await tx.auditEvent.create({ data: { actorId: input.actor.id, schoolId: activity.schoolId, action: "ACTIVITY_CLOSED", targetType: "Activity", targetId: activity.id, correlationId: input.correlationId ?? randomUUID(), before: { status: "OPEN", revision: locked.revision }, after: { status: "CLOSED", revision: closed.revision, suspendedGames: suspendedGames.count } } });
-      return closed;
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10000, timeout: 15000 });
-  } catch (error) { mapWrite(error); }
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const locked = await lockActivity(tx, input.activityId);
+        const activity = await teacherActivity(tx, input.actor, input.activityId);
+        if (locked.status !== "OPEN") throw new AuthorizationError("STATE_CONFLICT", "A atividade não está aberta.");
+        if (locked.revision !== input.revision) throw new AuthorizationError("STATE_CONFLICT", "A atividade foi alterada por outra operação.");
+        const now = new Date();
+        await tx.gameChallenge.updateMany({ where: { status: "PENDING", game: { participation: { activityId: activity.id } } }, data: { status: "CANCELLED", answeredAt: now } });
+        const suspendedGames = await tx.gameSession.updateMany({ where: { status: "ACTIVE", participation: { activityId: activity.id } }, data: { status: "SUSPENDED", suspendedAt: now, revision: { increment: 1 } } });
+        const closed = await tx.activity.update({ where: { id: activity.id }, data: { status: "CLOSED", closedAt: now, revision: { increment: 1 } }, select: { id: true, status: true, revision: true, closedAt: true } });
+        await tx.auditEvent.create({ data: { actorId: input.actor.id, schoolId: activity.schoolId, action: "ACTIVITY_CLOSED", targetType: "Activity", targetId: activity.id, correlationId: input.correlationId ?? randomUUID(), before: { status: "OPEN", revision: locked.revision }, after: { status: "CLOSED", revision: closed.revision, suspendedGames: suspendedGames.count } } });
+        return closed;
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10000, timeout: 15000 });
+    } catch (error) {
+      if (attempt < 2 && typeof error === "object" && error && "code" in error && error.code === "P2034") continue;
+      mapWrite(error);
+    }
+  }
+  throw new AuthorizationError("STATE_CONFLICT", "Não foi possível encerrar a atividade após operações concorrentes.");
 }
 
 export async function recordAcceptedAnswer(input: { activityId: string; studentId: string; clientActionId: string; outcome: "CORRECT" | "INCORRECT" }) {

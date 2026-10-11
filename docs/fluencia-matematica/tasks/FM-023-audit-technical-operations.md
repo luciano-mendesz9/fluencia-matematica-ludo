@@ -1,6 +1,6 @@
 # FM-023 — Auditoria, logs e operações técnicas
 
-**Ordem/fase:** 23/Operação | **Branch:** `task/FM-023-audit-technical-operations` | **Situação:** planejada
+**Ordem/fase:** 23/Operação | **Branch:** `task/FM-023-audit-technical-operations` | **Situação:** implementada, verificada tecnicamente e publicada; integração pendente
 
 ## Objetivo/dependências
 

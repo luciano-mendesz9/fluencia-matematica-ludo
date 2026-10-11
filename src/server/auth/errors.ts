@@ -1,4 +1,4 @@
-export type AuthorizationErrorCode = "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "VALIDATION" | "STATE_CONFLICT";
+export type AuthorizationErrorCode = "UNAUTHENTICATED" | "FORBIDDEN" | "NOT_FOUND" | "VALIDATION" | "STATE_CONFLICT" | "RATE_LIMITED";
 
 export class AuthorizationError extends Error {
   constructor(public readonly code: AuthorizationErrorCode, message: string) {
