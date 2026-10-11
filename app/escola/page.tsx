@@ -1,39 +1,23 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { AppShell } from "@/src/components/layout/app-shell";
-import { StructurePanel } from "@/src/components/layout/structure-panel";
+import { AreaDashboard } from "@/src/components/layout/area-dashboard";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { SchoolSwitcher } from "@/src/features/schools/school-forms";
 import { schoolNavigation } from "@/src/features/academics/navigation";
 import { requireArea } from "@/src/server/auth/guard";
 import { listAvailableSchools } from "@/src/server/schools/service";
+import { listAcademicYears, listClassGroups } from "@/src/server/academics/service";
+import { listStudents } from "@/src/server/students/service";
 
 export default async function SchoolPage() {
   const session = await requireArea("escola");
   const schoolContext = session.schoolContext;
   if (!schoolContext) redirect("/selecionar-escola");
-  const schools = await listAvailableSchools(session.user.id);
+  const actor = { ...session.user };
+  const [schools, years, classes, students] = await Promise.all([listAvailableSchools(session.user.id), listAcademicYears({ actor, schoolId: schoolContext.schoolId }), listClassGroups({ actor, schoolId: schoolContext.schoolId }), listStudents({ actor, schoolId: schoolContext.schoolId })]);
   return (
     <AppShell areaLabel="Coordenação" currentUserLabel={session.user.name} navigation={schoolNavigation} accountAction={<LogoutForm />} contextAction={<SchoolSwitcher userId={session.user.id} schools={schools} currentSchoolId={schoolContext.schoolId} />} statusLabel={schoolContext.schoolName}>
-      <StructurePanel title={`Coordenação — ${schoolContext.schoolName}`} description="Gerencie os anos letivos e as turmas da escola selecionada. O vínculo e o contexto são revalidados no servidor em cada operação." />
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Link href="/escola/anos" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
-          <h2 className="text-lg font-bold text-foreground">Anos letivos</h2>
-          <p className="mt-2 text-sm text-muted">Cadastre e acompanhe os períodos escolares.</p>
-        </Link>
-        <Link href="/escola/turmas" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
-          <h2 className="text-lg font-bold text-foreground">Turmas</h2>
-          <p className="mt-2 text-sm text-muted">Organize turmas do 1º ao 5º ano.</p>
-        </Link>
-        <Link href="/escola/alunos" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
-          <h2 className="text-lg font-bold text-foreground">Alunos</h2>
-          <p className="mt-2 text-sm text-muted">Cadastre alunos e gerencie matrículas individualmente.</p>
-        </Link>
-        <Link href="/escola/pessoas" className="rounded-panel border border-border bg-surface p-5 hover:border-brand">
-          <h2 className="text-lg font-bold text-foreground">Pessoas e atribuições</h2>
-          <p className="mt-2 text-sm text-muted">Cadastre professores e limite o acesso às turmas vigentes.</p>
-        </Link>
-      </div>
+      <AreaDashboard eyebrow="Visão geral da coordenação" title={schoolContext.schoolName} description="Gerencie a estrutura e as pessoas da escola selecionada com o contexto validado no servidor." metrics={[{ label: "Anos letivos ativos", value: years.filter((year) => year.status === "ACTIVE").length, description: "Períodos disponíveis", icon: "clipboard" }, { label: "Turmas ativas", value: classes.filter((group) => group.status === "ACTIVE").length, description: "Do 1º ao 5º ano", icon: "school" }, { label: "Alunos", value: students.length, description: "Contas vinculadas à escola", icon: "graduation-cap" }]} destinations={[{ href: "/escola/anos", title: "Anos letivos", description: "Cadastre e acompanhe os períodos escolares.", icon: "clipboard" }, { href: "/escola/turmas", title: "Turmas", description: "Organize as turmas e séries da escola.", icon: "school" }, { href: "/escola/alunos", title: "Alunos", description: "Cadastre alunos e gerencie matrículas individuais.", icon: "graduation-cap" }, { href: "/escola/pessoas", title: "Pessoas e atribuições", description: "Gerencie professores, coordenação e atribuições de turma.", icon: "people" }]} />
     </AppShell>
   );
 }

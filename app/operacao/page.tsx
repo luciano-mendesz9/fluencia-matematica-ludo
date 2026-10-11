@@ -1,5 +1,5 @@
 import { AppShell } from "@/src/components/layout/app-shell";
-import { StructurePanel } from "@/src/components/layout/structure-panel";
+import { AreaDashboard } from "@/src/components/layout/area-dashboard";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { requireArea } from "@/src/server/auth/guard";
 
@@ -9,7 +9,7 @@ export default async function OperationsPage() {
   const session = await requireArea("operacao");
   return (
     <AppShell areaLabel="Operação" currentUserLabel={session.user.name} navigation={navigation} accountAction={<LogoutForm />} statusLabel="Sessão ativa">
-      <StructurePanel title="Área de operação" description="Base protegida para saúde técnica e logs sanitizados, sem acesso automático a dados pedagógicos individuais." />
+      <AreaDashboard eyebrow="Visão técnica" title={`Olá, ${session.user.name}.`} description="Área protegida para capacidades operacionais. Dados pedagógicos individuais e ações críticas não são expostos a este perfil." destinations={[{ href: "/operacao", title: "Estado da área", description: "O painel técnico completo será conectado na tarefa operacional correspondente; nenhuma métrica simulada é exibida.", icon: "gauge", action: "Você está aqui" }]} />
     </AppShell>
   );
 }
