@@ -6,12 +6,18 @@ import type { AuthenticatedPrincipal } from "../../src/server/auth/policies";
 import { assertDatabaseMarker } from "../../src/server/database/marker";
 import { readDatabaseEnvironment } from "../../src/server/database/environment";
 import { getAuthorizedAnalytics, getStudentAnalytics } from "../../src/server/analytics/service";
+import { getAuthorizedReportDataset } from "../../src/server/reports/dataset";
+import { buildPdfReport } from "../../src/server/reports/pdf";
+import { buildXlsxReport } from "../../src/server/reports/xlsx";
+import ExcelJS from "exceljs";
+import { PDFDocument } from "pdf-lib";
 
 const suffix = randomUUID();
 const ids = { users: [] as string[], school: "", year: "", classes: [] as string[], activity: "", participations: [] as string[], games: [] as string[], questions: [] as string[], versions: [] as string[], theme: "", skill: "" };
 let teacher: AuthenticatedPrincipal;
 let hostileTeacher: AuthenticatedPrincipal;
 let developer: AuthenticatedPrincipal;
+let semed: AuthenticatedPrincipal;
 let students: AuthenticatedPrincipal[] = [];
 
 describe.sequential("FM-022 consultas pedagógicas autorizadas", () => {
@@ -22,8 +28,9 @@ describe.sequential("FM-022 consultas pedagógicas autorizadas", () => {
       ["Professor Analytics", null],
       ["Professor Analytics Externo", null],
       ["Developer Analytics", "DEVELOPER"],
+      ["SEMED Analytics", "SEMED_ADMIN"],
     ].map(([name, globalRole], index) => prisma.user.create({ data: { name: name!, email: `fm022-${index}-${suffix}@example.invalid`, normalizedEmail: `fm022-${index}-${suffix}@example.invalid`, passwordHash, globalRole: globalRole as "DEVELOPER" | null } })));
-    [teacher, hostileTeacher, developer] = adults.map((user) => ({ id: user.id, name: user.name, globalRole: user.globalRole, studentCode: null }));
+    [teacher, hostileTeacher, developer, semed] = adults.map((user) => ({ id: user.id, name: user.name, globalRole: user.globalRole, studentCode: null }));
     const studentRows = await Promise.all(["Ana Analytics", "Bia Analytics"].map((name, index) => prisma.user.create({ data: { name, studentCode: `FM022-${index}-${suffix}`, passwordHash } })));
     students = studentRows.map((user) => ({ id: user.id, name: user.name, globalRole: null, studentCode: user.studentCode }));
     ids.users.push(...adults.map(({ id }) => id), ...studentRows.map(({ id }) => id));
@@ -109,5 +116,37 @@ describe.sequential("FM-022 consultas pedagógicas autorizadas", () => {
     const result = await getStudentAnalytics({ actor: students[0]!, policy: { minimumDistinctQuestions: 2, reviewThresholdPercent: 50 } });
     expect(result.summary).toMatchObject({ answers: 3, repetitions: 1, distinctQuestions: 2 });
     expect(JSON.stringify(result)).not.toContain(students[1]!.name);
+  });
+
+  it("reutiliza exatamente o dataset autorizado no PDF/XLSX e mantém SEMED agregado", async () => {
+    const query = { schoolId: ids.school, classId: ids.classes[0] };
+    const [analytics, report] = await Promise.all([
+      getAuthorizedAnalytics({ actor: teacher, filters: query }),
+      getAuthorizedReportDataset({ actor: teacher, query }),
+    ]);
+    expect(report.summary.answers).toBe(analytics.summary.answers);
+    expect(report.summary.correct).toBe(analytics.summary.correct);
+    expect(report.summary.repetitions).toBe(analytics.summary.repetitions);
+    expect(report.groups).toHaveLength(analytics.groups.length);
+    expect(JSON.stringify(report)).not.toMatch(/RESPOSTA-PRIVADA|studentCode|normalizedEmail|passwordHash/i);
+
+    const xlsx = await buildXlsxReport(report);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(xlsx as never);
+    expect(workbook.getWorksheet("Cobertura")!.rowCount).toBe(analytics.groups.length + 1);
+    expect(workbook.getWorksheet("Alunos")!.rowCount).toBe(analytics.students.length + 1);
+
+    const pdf = await buildPdfReport(report);
+    expect((await PDFDocument.load(pdf)).getPageCount()).toBeGreaterThan(0);
+    const municipal = await getAuthorizedReportDataset({ actor: semed, query });
+    expect(municipal.scope).toBe("NETWORK");
+    expect(municipal.students).toEqual([]);
+    expect(JSON.stringify(municipal)).not.toContain(students[0]!.name);
+    const municipalWorkbook = new ExcelJS.Workbook();
+    await municipalWorkbook.xlsx.load(await buildXlsxReport(municipal) as never);
+    expect(municipalWorkbook.getWorksheet("Alunos")!.getCell("A2").value).toBe("Dados individuais não incluídos na exportação municipal.");
+    expect(JSON.stringify(municipalWorkbook.getWorksheet("Alunos")!.getSheetValues())).not.toContain(students[0]!.name);
+    await expect(getAuthorizedReportDataset({ actor: hostileTeacher, query })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(getAuthorizedReportDataset({ actor: developer, query: {} })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });

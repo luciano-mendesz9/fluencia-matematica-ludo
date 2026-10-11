@@ -1,6 +1,6 @@
 # FM-024 — Exportações PDF e XLSX
 
-**Ordem/fase:** 24/Resultados | **Branch:** `task/FM-024-pdf-xlsx-exports` | **Situação:** planejada
+**Ordem/fase:** 24/Resultados | **Branch:** `task/FM-024-pdf-xlsx-exports` | **Situação:** implementada e publicada; validação ampla pendente
 
 ## Objetivo/decisão
 

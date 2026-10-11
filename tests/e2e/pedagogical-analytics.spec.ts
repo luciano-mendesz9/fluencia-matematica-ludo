@@ -79,6 +79,14 @@ test("professor filtra, abre detalhe e vê denominadores sem dado cru", async ({
   await page.getByRole("link", { name: "Aluno Analytics E2E" }).click();
   await expect(page).toHaveURL(new RegExp(`classId=${classId}.*activityId=${fixture.activityId}.*studentId=${fixture.studentId}`));
   await expect(page.locator("body")).not.toContainText("SEGREDO-FM022");
+  const pdfDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Baixar PDF" }).click();
+  expect((await pdfDownload).suggestedFilename()).toMatch(/\.pdf$/);
+  const xlsxDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Baixar XLSX" }).click();
+  expect((await xlsxDownload).suggestedFilename()).toMatch(/\.xlsx$/);
+  const hostile = await page.request.get(`/api/relatorios/pdf?schoolId=${randomUUID()}&classId=${classId}`);
+  expect(hostile.status()).toBe(403);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await context.close();
 });

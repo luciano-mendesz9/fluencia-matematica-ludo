@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Feedback } from "@/src/components/ui/feedback";
 import type { getAuthorizedAnalytics } from "@/src/server/analytics/service";
 import { dateInputValue } from "./filters";
+import { ExportButtons } from "./export-buttons";
 
 type Result = Awaited<ReturnType<typeof getAuthorizedAnalytics>>;
 
@@ -13,6 +14,15 @@ function Metric({ label, value, detail }: { label: string; value: string | numbe
 
 export function AnalyticsDashboard({ result, basePath, showStudentNames = true }: { result: Result; basePath: string; showStudentNames?: boolean }) {
   const { summary, options, filters } = result;
+  const exportQuery = new URLSearchParams();
+  if (filters.schoolId) exportQuery.set("schoolId", filters.schoolId);
+  if (filters.classId) exportQuery.set("classId", filters.classId);
+  if (filters.activityId) exportQuery.set("activityId", filters.activityId);
+  if (filters.studentId) exportQuery.set("studentId", filters.studentId);
+  if (filters.skillId) exportQuery.set("skillId", filters.skillId);
+  if (filters.difficulty) exportQuery.set("difficulty", String(filters.difficulty));
+  if (filters.from) exportQuery.set("from", dateInputValue(filters.from));
+  if (filters.to) exportQuery.set("to", dateInputValue(filters.to));
   const studentHref = (studentId: string) => {
     const query = new URLSearchParams();
     if (filters.schoolId && result.scope === "NETWORK") query.set("schoolId", filters.schoolId);
@@ -41,6 +51,8 @@ export function AnalyticsDashboard({ result, basePath, showStudentNames = true }
       </div>
       <div className="mt-5 flex flex-wrap gap-3"><button className="min-h-11 rounded-control bg-brand px-5 font-bold text-white hover:bg-brand-hover">Aplicar filtros</button><Link href={basePath} className="inline-flex min-h-11 items-center rounded-control border border-border px-5 font-bold text-brand">Limpar</Link></div>
     </form>
+
+    <ExportButtons query={exportQuery.toString()} />
 
     <section aria-labelledby="analytics-summary"><h2 id="analytics-summary" className="mb-4 text-xl font-bold">Resumo com denominadores</h2><dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <Metric label="Participação" value={displayPercent(summary.participationPercent)} detail={`${summary.participants} de ${summary.recipients} destinatários-atividade responderam.`} />
