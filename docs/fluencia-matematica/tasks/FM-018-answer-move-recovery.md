@@ -1,6 +1,6 @@
 # FM-018 — Resposta, movimento e recuperação
 
-**Ordem/fase:** 18/Jogo | **Branch:** `task/FM-018-answer-move-recovery` | **Situação:** planejada
+**Ordem/fase:** 18/Jogo | **Branch:** `task/FM-018-answer-move-recovery` | **Situação:** verificada e publicada; integração pendente
 
 ## Objetivo/decisões
 

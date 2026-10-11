@@ -1,6 +1,6 @@
 # FM-020 — Retomada, concorrência e interface final do jogo
 
-**Ordem/fase:** 20/Jogo | **Branch:** `task/FM-020-resume-concurrency-game-ui` | **Situação:** planejada
+**Ordem/fase:** 20/Jogo | **Branch:** `task/FM-020-resume-concurrency-game-ui` | **Situação:** verificada e publicada na branch encadeada; integração pendente
 
 ## Objetivo/dependências
 

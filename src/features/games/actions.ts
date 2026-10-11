@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { AuthorizationError } from "@/src/server/auth/errors";
 import { requireUser } from "@/src/server/auth/policies";
-import { rollGame, startOrResumeGame } from "@/src/server/games/service";
-import { gameRollSchema, gameStartSchema } from "./schemas";
+import { answerGame, moveGame, rollGame, startOrResumeGame } from "@/src/server/games/service";
+import { gameAnswerSchema, gameMoveSchema, gameRollSchema, gameStartSchema } from "./schemas";
 
 export type GameActionState = { status: "idle" | "success" | "error"; message?: string };
 const errorState = (error: unknown, fallback: string): GameActionState => ({
@@ -18,8 +19,8 @@ export async function startGameAction(_state: GameActionState, data: FormData): 
   try {
     await startOrResumeGame({ actor: await requireUser(), activityId: parsed.data.activityId });
     revalidatePath(`/aluno/atividades/${parsed.data.activityId}`);
-    return { status: "success", message: "Partida pronta." };
   } catch (error) { return errorState(error, "Não foi possível iniciar a partida."); }
+  redirect(`/aluno/atividades/${parsed.data.activityId}/jogo`);
 }
 
 export async function rollGameAction(_state: GameActionState, data: FormData): Promise<GameActionState> {
@@ -39,5 +40,33 @@ export async function rollGameAction(_state: GameActionState, data: FormData): P
   } catch (error) {
     revalidatePath(`/aluno/atividades/${data.get("activityId")}`);
     return errorState(error, "Não foi possível lançar o dado.");
+  }
+}
+
+export async function answerGameAction(_state: GameActionState, data: FormData): Promise<GameActionState> {
+  const parsed = gameAnswerSchema.safeParse(Object.fromEntries(data));
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message ?? "Resposta inválida." };
+  try {
+    const result = await answerGame({ actor: await requireUser(), ...parsed.data });
+    revalidatePath(`/aluno/atividades/${data.get("activityId")}`);
+    revalidatePath(`/aluno/atividades/${data.get("activityId")}/jogo`);
+    return { status: "success", message: result.game.feedback?.outcome === "CORRECT" ? `Resposta correta! +${result.game.feedback.awardedPoints} pontos.` : "Vamos tentar novamente. Confira a explicação." };
+  } catch (error) {
+    revalidatePath(`/aluno/atividades/${data.get("activityId")}/jogo`);
+    return errorState(error, "Não foi possível registrar a resposta.");
+  }
+}
+
+export async function moveGameAction(_state: GameActionState, data: FormData): Promise<GameActionState> {
+  const parsed = gameMoveSchema.safeParse(Object.fromEntries(data));
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message ?? "Movimento inválido." };
+  try {
+    const result = await moveGame({ actor: await requireUser(), ...parsed.data });
+    revalidatePath(`/aluno/atividades/${data.get("activityId")}`);
+    revalidatePath(`/aluno/atividades/${data.get("activityId")}/jogo`);
+    return { status: "success", message: result.victoryBonus ? "Vitória! Bônus de 30 pontos concedido." : result.capturedPieceIds.length ? "Movimento concluído com captura." : "Movimento concluído." };
+  } catch (error) {
+    revalidatePath(`/aluno/atividades/${data.get("activityId")}/jogo`);
+    return errorState(error, "Não foi possível mover o pino.");
   }
 }

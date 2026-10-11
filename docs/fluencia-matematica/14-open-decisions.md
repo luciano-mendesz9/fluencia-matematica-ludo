@@ -2,8 +2,8 @@
 
 | ID/prioridade | Decisão e alternativas | Bloqueia | Responsável/evidência |
 | --- | --- | --- | --- |
-| OD-001 alta | confirmar erro reduz prêmio futuro, não saldo | FM-019 | responsável do produto |
-| OD-002 alta | chegada exata; extra da máquina; convivência; contador ao voltar à base | FM-018–020 | produto + testes de exemplos |
+| OD-001 confirmada | erro reduz prêmio futuro, nunca o saldo acumulado | FM-019 | responsável do produto, 10/10/2026 |
+| OD-002 confirmada | chegada exata; sem extra da máquina no 6; convivência própria; contador preservado ao voltar à base | FM-018–020 | responsável do produto, 10/10/2026 |
 | OD-003 parcial | matriz curricular série/habilidade/dificuldade e limiares | FM-010,013,022,027 | equipe pedagógica |
 | OD-004 alta | política municipal de privacidade, retenção, exclusão e grupos pequenos | FM-023,024,027 | município/jurídico |
 | OD-005 alta | provedores de e-mail, TTS e mídia/custos/SLA | FM-005,011,026 | produto/infra |
@@ -38,3 +38,20 @@ Decisão confirmada pelo responsável do produto em 09/10/2026 para FM-014:
 - totais de respostas certas e erradas permanecem separados para apoiar o feedback do professor.
 
 Lançamento, áudio, abandono e demais ações sem resposta aceita não avançam a meta.
+
+## OD-001 — efeito do erro na pontuação
+
+Decisão confirmada pelo responsável do produto em 10/10/2026:
+
+- o erro reduz apenas o prêmio do próximo acerto na mesma sequência;
+- a progressão é 10, 7, 4 e mínimo de 1 ponto a partir de três erros;
+- nenhum erro debita pontos já acumulados pelo aluno.
+
+## OD-002 — regras complementares do Ludo
+
+Decisão confirmada pelo responsável do produto em 10/10/2026:
+
+- a chegada exige valor exato;
+- a máquina não recebe lançamento extra ao tirar 6;
+- pinos próprios podem compartilhar a mesma casa;
+- quando todos os pinos jogáveis voltam à base, o contador de erros da sequência é preservado.
