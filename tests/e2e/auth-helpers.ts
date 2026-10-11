@@ -9,7 +9,7 @@ export async function login(page: Page, identifier: string, password: string = a
   await page.context().setExtraHTTPHeaders({ "x-forwarded-for": `198.51.${thirdOctet}.${fourthOctet}` });
   await page.goto("/login");
   await page.getByLabel("E-mail ou código do aluno").fill(identifier);
-  await page.getByLabel("Senha").fill(password);
+  await page.getByLabel("Senha", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
 }
 
