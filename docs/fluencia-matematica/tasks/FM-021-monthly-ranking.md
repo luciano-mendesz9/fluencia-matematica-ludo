@@ -1,6 +1,6 @@
 # FM-021 — Ranking mensal por turma
 
-**Ordem/fase:** 21/Resultados | **Branch:** `task/FM-021-monthly-ranking` | **Situação:** planejada
+**Ordem/fase:** 21/Resultados | **Branch:** `task/FM-021-monthly-ranking` | **Situação:** verificada e publicada; integração pendente
 
 ## Objetivo/decisões
 

@@ -9,7 +9,7 @@ import { requireArea } from "@/src/server/auth/guard";
 import { getStudentActivity } from "@/src/server/activities/service";
 import { getActiveGameForActivity } from "@/src/server/games/service";
 
-const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }];
+const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }, { href: "/aluno/ranking", label: "Ranking" }];
 
 export default async function StudentActivityPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireArea("aluno");

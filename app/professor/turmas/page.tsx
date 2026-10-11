@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/src/components/layout/app-shell";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { SchoolSwitcher } from "@/src/features/schools/school-forms";
@@ -29,6 +30,7 @@ export default async function TeacherClassesPage() {
             <li key={assignment.id} className="rounded-panel border border-border bg-surface p-5">
               <h2 className="text-lg font-bold text-foreground">{assignment.classGroup.name}</h2>
               <p className="mt-1 text-sm text-muted">{assignment.classGroup.grade}º ano · {assignment.classGroup.academicYear.year}</p>
+              <Link href={`/professor/turmas/${assignment.classId}`} className="mt-4 inline-flex min-h-11 items-center font-bold text-brand">Ver ranking mensal →</Link>
             </li>
           ))}
         </ul>

@@ -8,10 +8,10 @@
 | OD-004 alta | política municipal de privacidade, retenção, exclusão e grupos pequenos | FM-023,024,027 | município/jurídico |
 | OD-005 alta | provedores de e-mail, TTS e mídia/custos/SLA | FM-005,011,026 | produto/infra |
 | OD-006 confirmada | respostas aceitas certas e erradas contam na meta; progresso acumula entre partidas | FM-014 | responsável do produto, 09/10/2026 |
-| OD-007 média | fuso America/Fortaleza, empate 1/1/3 e transferência sem reatribuição | FM-021 | produto |
+| OD-007 confirmada | fuso America/Fortaleza, empate 1/1/3 e transferência sem reatribuição | FM-021 | responsável do produto, 10/10/2026 |
 | OD-008 média | campos exatos PDF/XLSX e formatos | FM-024 | usuários/pedagógico |
 | OD-009 média | tamanho da rede, simultaneidade, RPO/RTO | FM-026–027 | município/infra |
-| OD-010 média | nome exibido, validação visual e dispositivos do piloto | FM-002,021,025,027 | design/produto |
+| OD-010 parcial | ranking exibe nome e sobrenome completos; validação visual e dispositivos do piloto pendentes | FM-002,021,025,027 | responsável do produto, 10/10/2026 |
 
 Decisões confirmadas viram ADR ou atualização identificada deste arquivo, com data/autor. Tarefas não
 afetadas prosseguem; tarefa bloqueada não substitui requisito por suposição silenciosa.
@@ -55,3 +55,22 @@ Decisão confirmada pelo responsável do produto em 10/10/2026:
 - a máquina não recebe lançamento extra ao tirar 6;
 - pinos próprios podem compartilhar a mesma casa;
 - quando todos os pinos jogáveis voltam à base, o contador de erros da sequência é preservado.
+
+## OD-007 — ranking mensal
+
+Decisão confirmada pelo responsável do produto em 10/10/2026:
+
+- o mês civil usa o fuso `America/Fortaleza`;
+- empates usam classificação competitiva, como 1/1/3;
+- uma transferência não reatribui eventos de pontos já registrados: cada evento permanece na turma histórica gravada em `classId`.
+
+Não há reset, exclusão ou snapshot mensal. A consulta do mês atual deriva diretamente dos eventos.
+
+## OD-010 — nome no ranking
+
+Decisão parcial confirmada pelo responsável do produto em 10/10/2026 para a FM-021:
+
+- o ranking exibe o nome e o sobrenome completos armazenados no cadastro do aluno;
+- e-mail, código individual, identificadores técnicos e dados de erros não fazem parte do DTO do ranking.
+
+Permanecem abertas para FM-025 e FM-027 a validação visual e a lista final de dispositivos do piloto.

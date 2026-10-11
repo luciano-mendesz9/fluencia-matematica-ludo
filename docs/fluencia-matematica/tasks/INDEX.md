@@ -1,8 +1,10 @@
 # Índice ordenado de tarefas
 
-Estado em 10/10/2026: FM-001–FM-016 estão **integradas** em `origin/main`; FM-016 entrou pela PR #8
-(`fa5072d`). FM-017 está **implementada e verificada**, inclusive no Neon development e Chromium,
-mas ainda não foi commitada/publicada nem integrada. FM-018–027 permanecem **planejadas**.
+Estado em 11/10/2026: FM-001–FM-016 estão **integradas** em `origin/main`; FM-016 entrou pela PR #8
+(`fa5072d`). FM-017 está **verificada e publicada** em `task/FM-017-game-session-turns`; FM-018–020
+estão **verificadas e publicadas** no checkpoint encadeado `task/FM-018-answer-move-recovery`
+(`dcd314e`). FM-021 está **verificada e publicada** em `task/FM-021-monthly-ranking`.
+FM-017–021 ainda não estão integradas; FM-022–027 permanecem **planejadas**.
 Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
