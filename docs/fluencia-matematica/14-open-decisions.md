@@ -4,14 +4,14 @@
 | --- | --- | --- | --- |
 | OD-001 confirmada | erro reduz prêmio futuro, nunca o saldo acumulado | FM-019 | responsável do produto, 10/10/2026 |
 | OD-002 confirmada | chegada exata; sem extra da máquina no 6; convivência própria; contador preservado ao voltar à base | FM-018–020 | responsável do produto, 10/10/2026 |
-| OD-003 parcial | matriz curricular série/habilidade/dificuldade e limiares | FM-010,013,022,027 | equipe pedagógica |
-| OD-004 parcial | FM-024 sem expurgo; SEMED agregado; escola identifica apenas no escopo autorizado; política definitiva pendente | FM-027 | responsável do produto, 11/10/2026; município/jurídico |
-| OD-005 alta | provedores de e-mail, TTS e mídia/custos/SLA | FM-005,011,026 | produto/infra |
+| OD-003 confirmada para o piloto | 5 questões distintas; abaixo de 50% sugere retomada; relatórios individuais autorizados no escopo | FM-022,027 | responsável do produto, 12/10/2026; validação pedagógica no piloto |
+| OD-004 confirmada para o piloto | retenção por categoria, logs de erro por 6 meses e supressão de grupos menores que 5 | FM-026–027 | responsável do produto, 12/10/2026; validação municipal/jurídica antes de expurgo |
+| OD-005 confirmada para o piloto | Nodemailer com Gmail/senha de app; áudio e imagens fora desta etapa | FM-005,011,026 | responsável do produto, 12/10/2026 |
 | OD-006 confirmada | respostas aceitas certas e erradas contam na meta; progresso acumula entre partidas | FM-014 | responsável do produto, 09/10/2026 |
 | OD-007 confirmada | fuso America/Fortaleza, empate 1/1/3 e transferência sem reatribuição | FM-021 | responsável do produto, 10/10/2026 |
 | OD-008 confirmada | PDF com filtros/resumo/cobertura/alunos autorizados; XLSX Resumo/Cobertura/Alunos/Definições | FM-024 | responsável do produto, 11/10/2026 |
-| OD-009 média | tamanho da rede, simultaneidade, RPO/RTO | FM-026–027 | município/infra |
-| OD-010 parcial | ranking exibe nome e sobrenome completos; validação visual e dispositivos do piloto pendentes | FM-002,021,025,027 | responsável do produto, 10/10/2026 |
+| OD-009 confirmada para o piloto | até 2 escolas/300 alunos/100 simultâneos; carga 2x; RPO 1 h e RTO 4 h | FM-026–027 | responsável do produto, 12/10/2026 |
+| OD-010 confirmada para o piloto | ranking com nome completo e matriz real de dispositivos/acessibilidade | FM-002,021,025,027 | responsável do produto, 12/10/2026 |
 
 Decisões confirmadas viram ADR ou atualização identificada deste arquivo, com data/autor. Tarefas não
 afetadas prosseguem; tarefa bloqueada não substitui requisito por suposição silenciosa.
@@ -25,7 +25,23 @@ Decisão confirmada pelo responsável do produto em 08/10/2026 para FM-010 e FM-
 - a dificuldade é uma avaliação contextual dentro do conteúdo e da série informados, não uma escala comparável globalmente entre séries;
 - habilidade é um detalhamento opcional do tema e, quando informada, deve pertencer ao tema selecionado.
 
-Permanece aberta para FM-022 e FM-027 a definição pedagógica dos limiares de domínio, agregações e comparações analíticas. Esta decisão parcial não constitui validação científica desses limiares.
+Decisão confirmada pelo responsável do produto em 12/10/2026 para o piloto:
+
+- a unidade do feedback é aluno + habilidade, ou tema quando a questão não declarar habilidade, + dificuldade;
+- o recorte exige ao menos 5 versões de questão distintas; abaixo disso, mostrar “Dados insuficientes”;
+- com amostra suficiente e precisão abaixo de 50%, mostrar “Sugestão de retomada”;
+- com precisão igual ou superior a 50%, mostrar somente observação descritiva, sem declarar domínio;
+- respostas repetidas entram na precisão, aparecem separadamente e não aumentam a amostra distinta;
+- não usar “domina”, “não domina”, “aprovado” ou diagnóstico, nem comparar publicamente alunos,
+  turmas, escolas ou séries pela precisão;
+- toda observação informa acertos, respostas, questões distintas, repetições e período analisado;
+- professor e coordenador podem abrir relatórios individuais somente dos alunos do próprio escopo
+  autorizado; a SEMED mantém visão municipal agregada, conforme OD-004;
+- 5 questões distintas e 50% são parâmetros iniciais do piloto, sujeitos a revisão documentada pela
+  equipe pedagógica, sem alteração retroativa das evidências históricas.
+
+A decisão libera a configuração dos limiares na aplicação. A validação pedagógica humana durante o
+piloto continua sendo um gate da FM-027 e não equivale a validação científica.
 
 ## OD-004 — retenção e exclusão
 
@@ -43,8 +59,52 @@ Para a FM-024, o responsável do produto confirmou em 11/10/2026:
 - professor e coordenador exportam alunos identificados apenas nas escolas/turmas autorizadas;
 - senha, hash, token, código de acesso e histórico de ranking nunca entram no relatório.
 
-A política municipal definitiva de retenção, exclusão e grupos pequenos continua aberta para a
-FM-027; a ausência dessa decisão permanece fail-closed, sem apagar evidências silenciosamente.
+A política aprovada pelo responsável do produto em 12/10/2026 para o piloto é:
+
+- respostas, progresso, pontos e histórico pedagógico: 5 anos após o encerramento do ano letivo;
+- auditoria administrativa e de segurança: 5 anos;
+- logs técnicos comuns: 90 dias;
+- logs técnicos de erro ou incidente: 6 meses;
+- exclusão encerra acesso e vínculos antes de qualquer anonimização; dados pessoais somente podem ser
+  anonimizados quando não houver obrigação vigente de conservação;
+- professor e coordenador veem alunos identificados apenas no escopo autorizado; a SEMED vê dados
+  municipais agregados;
+- agregações municipais com menos de 5 alunos exibem “grupo pequeno” e suprimem contagens,
+  percentuais e detalhamento que permitam reidentificação;
+- nenhum expurgo automático será ativado antes da validação municipal/jurídica e de um ensaio em
+  ambiente isolado. A ausência dessa validação permanece fail-closed, sem apagar evidências.
+
+## OD-005 — e-mail, áudio e mídia no piloto
+
+Decisão confirmada pelo responsável do produto em 12/10/2026:
+
+- o envio de e-mail usa Nodemailer por SMTP do Gmail com uma conta dedicada e senha de app;
+- a conta deve ter verificação em duas etapas; a senha de app fica somente em secret do ambiente,
+  nunca no código, banco, log, relatório ou repositório;
+- Gmail gratuito é solução provisória, sem SLA contratual assumido pela plataforma; limites,
+  bloqueios, rejeições e revogação da senha de app devem gerar alerta operacional;
+- os limites vigentes do Gmail devem ser monitorados; bloqueio, rejeição ou aproximação do limite
+  configurado para a operação gera alerta, sem presumir capacidade ou disponibilidade contratual;
+- falha no e-mail não revela se a conta existe e preserva a redefinição assistida autorizada;
+- áudio, TTS e imagens ficam fora desta etapa do piloto, inclusive sem contratar provedor externo;
+- a remoção ou desativação das experiências atuais de áudio/imagem exige tarefa de implementação e
+  teste próprios; esta decisão não declara que o código já foi alterado.
+
+Essa escolha substitui, para o piloto, a proposta anterior de contratar provedores externos de TTS e
+mídia. Uma expansão além do volume do piloto exige reavaliar provedor, custo, entregabilidade e SLA.
+
+## OD-009 — capacidade, continuidade e recuperação
+
+Decisão confirmada pelo responsável do produto em 12/10/2026 para o piloto:
+
+- capacidade de referência: até 2 escolas, 10 turmas, 300 alunos e 30 adultos;
+- pico esperado de 100 usuários simultâneos; o ensaio de carga deve validar 200 simultâneos;
+- metas sob a carga aprovada: p95 de leitura abaixo de 1 s, p95 de gravação abaixo de 1,5 s e taxa de
+  erro abaixo de 1%;
+- RPO de 1 hora e RTO de 4 horas;
+- migration e restauração devem ser ensaiadas em destino isolado, com reconciliação de amostra, antes
+  do go/no-go;
+- expansão da rede exige inventário real e novo teste, sem extrapolar silenciosamente o piloto.
 
 ## OD-008 — formato das exportações
 
@@ -104,4 +164,17 @@ Decisão parcial confirmada pelo responsável do produto em 10/10/2026 para a FM
 - o ranking exibe o nome e o sobrenome completos armazenados no cadastro do aluno;
 - e-mail, código individual, identificadores técnicos e dados de erros não fazem parte do DTO do ranking.
 
-Permanecem abertas para FM-025 e FM-027 a validação visual e a lista final de dispositivos do piloto.
+Decisão complementar confirmada pelo responsável do produto em 12/10/2026 para o piloto:
+
+- Android Chrome em aparelho intermediário ou de baixo desempenho, largura de 360 px;
+- iPhone Safari, largura aproximada de 390 px;
+- Chromebook Chrome e Windows Chrome/Edge em 1366×768; Firefox desktop complementar;
+- versão estável atual e anterior dos navegadores principais, Wi-Fi escolar e conexão móvel limitada;
+- zoom de 200%, texto ampliado, teclado, TalkBack no Android, NVDA no Windows e VoiceOver no iPhone
+  quando houver dispositivo disponível;
+- validação humana de login, seleção de escola, atividade, jogo, feedback, ranking e exportação;
+- nenhuma violação automática crítica/alta; falha que impeça login, resposta, jogo ou leitura do
+  feedback bloqueia o piloto.
+
+A automação técnica da FM-025 permanece válida, mas não substitui a assinatura humana dessa matriz na
+FM-027.
