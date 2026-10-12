@@ -15,7 +15,7 @@ export default async function globalTeardown() {
       authFixtures.schools.noMembership.email,
       authFixtures.schools.multiTeacher.email,
     ];
-    const taskEmails = [authFixtures.people.newTeacher.email, authFixtures.people.globalDeveloper.email];
+    const taskEmails = [authFixtures.people.newTeacher.email, authFixtures.people.globalDeveloper.email, authFixtures.people.accessibilityDeveloper.email];
     const cleanupEmails = [...schoolEmails, ...taskEmails];
     const schoolCodes = [
       authFixtures.schools.schoolA.code,

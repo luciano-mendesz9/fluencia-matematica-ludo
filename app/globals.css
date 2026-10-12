@@ -53,6 +53,14 @@ body {
   letter-spacing: -0.008em;
 }
 
+:where(p, h1, h2, h3, li, label) {
+  overflow-wrap: anywhere;
+}
+
+input[type="file"] {
+  max-inline-size: 100%;
+}
+
 h1,
 h2,
 h3,
@@ -126,6 +134,15 @@ select {
 
 .adult-shell :where(select, input, textarea) {
   border-color: var(--border);
+}
+
+.adult-shell :where(form, fieldset, label, section) {
+  min-inline-size: 0;
+}
+
+.adult-shell :where(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .student-shell {
