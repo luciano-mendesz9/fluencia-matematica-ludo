@@ -1,13 +1,25 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import type { PieceState } from "@/src/domain/ludo";
 import { Icon } from "@/src/components/ui/icon";
 import type { GameDto, PublicMove } from "@/src/server/games/service";
 import { answerGameAction, moveGameAction, rollGameAction, startGameAction, type GameActionState } from "./actions";
+import { LudoBoard } from "./ludo-board";
+import { movementSteps } from "./ludo-board-model";
 
 const initial: GameActionState = { status: "idle" };
+
+type DiceOverlayState = {
+  owner: "STUDENT" | "MACHINE";
+  face: number;
+  finalFace: number | null;
+  revealed: boolean;
+  startedAt: number;
+  remainingMachineRolls: Array<{ dice: number; pieceId: string | null }>;
+};
 
 export function StartGameButton({ activityId }: { activityId: string }) {
   const router = useRouter();
@@ -19,36 +31,168 @@ export function StartGameButton({ activityId }: { activityId: string }) {
 function ActionMessage({ state }: { state: GameActionState }) {
   return state.message ? <p role={state.status === "error" ? "alert" : "status"} className={`rounded-xl p-3 text-sm font-bold ${state.status === "error" ? "bg-red-50 text-danger" : "bg-blue-50 text-brand"}`}>{state.message}</p> : null;
 }
-function positionLabel(position: GameDto["pieces"][number]["position"]) { return position.kind === "BASE" ? "na base" : position.kind === "HOME" ? "na chegada" : `na casa ${position.progress + 1}`; }
+
 function phaseLabel(game: GameDto) {
   if (game.status === "SUSPENDED") return "Partida pausada";
   if (game.status === "FINISHED") return game.winner === "STUDENT" ? "Você venceu!" : "A máquina venceu";
   if (game.phase === "WAITING_FIRST_EXIT") return "Tire 6 para começar";
   if (game.phase === "RECOVERY_RELEASE") return "Tire 6 para voltar ao jogo";
-  if (game.phase === "RECOVERY_ROLL") return "Rodada de recuperação";
+  if (game.phase === "RECOVERY_ROLL") return "Nova tentativa";
   if (game.phase === "CHALLENGE_PENDING") return "Desafio matemático";
-  if (game.phase === "MOVE_PENDING") return "Escolha um pino";
+  if (game.phase === "MOVE_PENDING") return "Escolha o pino que deseja mover";
   if (game.turn === "MACHINE") return "Vez da máquina";
   return "Sua vez";
 }
-function Piece({ id, player, muted = false }: { id: string; player: "STUDENT" | "MACHINE"; muted?: boolean }) { return <span title={`${player === "STUDENT" ? "Seu" : "Máquina"} pino ${id.slice(1)}`} className={`grid size-8 place-items-center text-sm font-black shadow-sm ${player === "STUDENT" ? "rounded-full bg-brand text-white" : "rotate-45 rounded-[0.4rem] bg-[#f7c948] text-[#4b3600]"} ${muted ? "opacity-20" : ""}`}><span className={player === "MACHINE" ? "-rotate-45" : ""}>{id.slice(1)}</span></span>; }
-function StudentGameBoard({ game }: { game: GameDto }) {
-  const students = game.pieces.filter((piece) => piece.player === "STUDENT"); const machine = game.pieces.filter((piece) => piece.player === "MACHINE"); const active = game.pieces.filter((piece) => piece.position.kind === "TRACK"); const home = game.pieces.filter((piece) => piece.position.kind === "HOME");
-  return <div><div className="student-card aspect-square w-full p-3 sm:p-5" aria-hidden="true"><div className="grid h-full grid-cols-3 grid-rows-3 gap-2 rounded-[1.1rem] bg-[#f4f7fc] p-2"><div className="grid grid-cols-2 place-content-center gap-2 rounded-2xl bg-[#fff4dc] p-2">{machine.map((piece) => <Piece key={piece.id} id={piece.id} player="MACHINE" muted={piece.position.kind !== "BASE"} />)}</div><div className="grid place-items-center rounded-xl bg-white text-amber-600">★</div><div className="grid place-items-center rounded-2xl bg-amber-50"><span className="text-xs font-black text-amber-800">MÁQUINA</span></div><div className="grid place-items-center rounded-xl bg-white text-brand">★</div><div className="relative grid place-items-center overflow-hidden rounded-2xl bg-[#eaf1fe]"><span className="text-4xl text-brand/20">✦</span><div className="absolute inset-2 flex flex-wrap content-center justify-center gap-1.5">{active.map((piece) => <Piece key={piece.id} id={piece.id} player={piece.player} />)}{home.map((piece) => <Piece key={piece.id} id={piece.id} player={piece.player} />)}</div></div><div className="grid place-items-center rounded-xl bg-white text-amber-600">★</div><div className="grid place-items-center rounded-2xl bg-blue-50"><span className="text-xs font-black text-brand">VOCÊ</span></div><div className="grid place-items-center rounded-xl bg-white text-brand">★</div><div className="grid grid-cols-2 place-content-center gap-2 rounded-2xl bg-[#eaf3ff] p-2">{students.map((piece) => <Piece key={piece.id} id={piece.id} player="STUDENT" muted={piece.position.kind !== "BASE"} />)}</div></div></div><ul className="sr-only" aria-label="Posições dos pinos">{game.pieces.map((piece) => <li key={piece.id}>{piece.player === "STUDENT" ? "Seu" : "Máquina"} pino {piece.id.slice(1)}: {positionLabel(piece.position)}</li>)}</ul><p className="mt-2 text-center text-xs font-bold text-muted"><span className="text-brand">●</span> seus pinos · <span className="text-amber-500">◆</span> máquina · ★ casa segura</p></div>;
+
+function Modal({ title, eyebrow, children, tone = "blue" }: { title: string; eyebrow: string; children: ReactNode; tone?: "blue" | "yellow" }) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const focusTarget = modalRef.current?.querySelector<HTMLElement>("[data-autofocus], input, button");
+    focusTarget?.focus({ preventScroll: true });
+  }, []);
+  return <div className="game-modal-backdrop" role="presentation"><div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="game-modal-title" className={`game-modal game-modal-${tone}`}>
+    <p className="game-modal-eyebrow">{eyebrow}</p>
+    <h2 id="game-modal-title" className="game-modal-title">{title}</h2>
+    {children}
+  </div></div>;
 }
-function SpeakButton({ text }: { text: string }) { const speak = () => { if (!("speechSynthesis" in window)) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = "pt-BR"; window.speechSynthesis.speak(utterance); }; return <><h2 className="sr-only">Desafio</h2><button type="button" onClick={speak} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 font-extrabold text-brand"><span aria-hidden="true">🔊</span>Ouvir desafio</button></>; }
+
+const PIP_POSITIONS: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+
+function DieFace({ value, rolling = false }: { value: number; rolling?: boolean }) {
+  const pips = new Set(PIP_POSITIONS[value] ?? []);
+  return <div className={`game-die-face ${rolling ? "game-die-rolling" : ""}`} aria-label={`Dado ${value}`}>{Array.from({ length: 9 }, (_, index) => <span key={index} className={pips.has(index) ? "game-die-pip" : ""} />)}</div>;
+}
+
+function DiceOverlay({ state }: { state: DiceOverlayState }) {
+  const student = state.owner === "STUDENT";
+  return <Modal title={student ? "Girando o seu dado…" : "A máquina está jogando…"} eyebrow={student ? "Sua vez" : "Turno da máquina"} tone={student ? "blue" : "yellow"}>
+    <div className="game-die-stage" aria-live="polite"><DieFace value={state.face} rolling={!state.revealed} /></div>
+    <p className="mt-4 text-center font-extrabold text-muted">{state.revealed && state.finalFace !== null ? `Resultado: ${state.finalFace}` : "Sorteando um valor de 1 a 6…"}</p>
+  </Modal>;
+}
+
 function AnswerForm({ activityId, game, online }: { activityId: string; game: GameDto; online: boolean }) {
-  const [state, action, pending] = useActionState(answerGameAction, initial); const [actionId] = useState(() => crypto.randomUUID()); const challenge = game.challenge!;
-  return <form action={action} className="mt-4 grid gap-3"><input type="hidden" name="activityId" value={activityId} /><input type="hidden" name="gameId" value={game.id} /><input type="hidden" name="challengeId" value={challenge.id} /><input type="hidden" name="clientActionId" value={actionId} /><input type="hidden" name="expectedRevision" value={game.revision} />{challenge.prompt.answerType === "MULTIPLE_CHOICE" ? <fieldset className="grid gap-2"><legend className="sr-only">Escolha uma resposta</legend>{challenge.prompt.options.map((option) => <label key={option.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-[#d9e1ec] bg-white p-3 font-bold has-[:checked]:border-brand has-[:checked]:bg-blue-50"><input required type="radio" name="response" value={option.id} className="size-4 accent-blue-700" />{option.text}</label>)}</fieldset> : <label className="grid gap-2 font-extrabold">Sua resposta<input required name="response" inputMode="decimal" autoComplete="off" placeholder="Digite um número" className="min-h-12 rounded-xl border border-border px-3 text-base font-normal outline-none focus:border-brand focus:ring-2 focus:ring-blue-100" /></label>}<button disabled={pending || !online} className="student-primary w-full px-4">{pending ? "Aguarde..." : online ? "Confirmar resposta" : "Sem conexão"}</button><ActionMessage state={state} /></form>;
+  const [state, action, pending] = useActionState(answerGameAction, initial);
+  const [actionId] = useState(() => crypto.randomUUID());
+  const challenge = game.challenge!;
+  return <form action={action} className="mt-4 grid gap-3">
+    <input type="hidden" name="activityId" value={activityId} /><input type="hidden" name="gameId" value={game.id} /><input type="hidden" name="challengeId" value={challenge.id} /><input type="hidden" name="clientActionId" value={actionId} /><input type="hidden" name="expectedRevision" value={game.revision} />
+    {challenge.prompt.answerType === "MULTIPLE_CHOICE" ? <fieldset className="game-answer-options"><legend className="sr-only">Escolha uma resposta</legend>{challenge.prompt.options.map((option, index) => <label key={option.id} className="game-answer-option"><input data-autofocus={index === 0 ? "true" : undefined} required type="radio" name="response" value={option.id} /><span>{option.text}</span></label>)}</fieldset> : <label className="grid gap-2 font-extrabold">Sua resposta<input data-autofocus required name="response" inputMode="decimal" autoComplete="off" placeholder="Digite um número" className="game-number-answer" /></label>}
+    <button disabled={pending || !online} className="student-primary w-full px-4">{pending ? "Aguarde..." : online ? "Confirmar resposta e mover peças" : "Sem conexão"}</button><ActionMessage state={state} />
+  </form>;
 }
-function MoveForm({ activityId, game, move, online }: { activityId: string; game: GameDto; move: PublicMove; online: boolean }) { const [state, action, pending] = useActionState(moveGameAction, initial); const [actionId] = useState(() => crypto.randomUUID()); return <form action={action} className="grid gap-2"><input type="hidden" name="activityId" value={activityId} /><input type="hidden" name="gameId" value={game.id} /><input type="hidden" name="pieceId" value={move.pieceId} /><input type="hidden" name="clientActionId" value={actionId} /><input type="hidden" name="expectedRevision" value={game.revision} /><button disabled={pending || !online} className="min-h-12 rounded-xl border border-blue-200 bg-blue-50 px-3 text-left font-extrabold text-brand hover:bg-blue-100 disabled:opacity-60">{pending ? "Aguarde..." : `Mover pino ${move.pieceId.slice(1)} para ${positionLabel(move.to)}${move.captures.length ? " e capturar" : ""}`}</button><ActionMessage state={state} /></form>; }
+
+function RollForm({ activityId, game, online, pending, action, onStart, label = "Girar o dado" }: { activityId: string; game: GameDto; online: boolean; pending: boolean; action: (payload: FormData) => void; onStart: () => void; label?: string }) {
+  const [clientActionId] = useState(() => crypto.randomUUID());
+  const accessibleLabel = !online ? "Sem conexão" : label === "Girar o dado" ? "Jogar dado" : label;
+  return <form action={action} onSubmit={onStart} className="grid gap-3"><input type="hidden" name="activityId" value={activityId} /><input type="hidden" name="gameId" value={game.id} /><input type="hidden" name="clientActionId" value={clientActionId} /><input type="hidden" name="expectedRevision" value={game.revision} /><button data-autofocus aria-label={accessibleLabel} disabled={pending || !online} className="student-primary game-roll-button px-5">{pending ? "Aguarde..." : online ? <><span aria-hidden="true">🎲</span>{label}</> : "Sem conexão"}</button></form>;
+}
+
+function samePosition(left: PieceState["position"], right: PieceState["position"]) { return left.kind === right.kind && (left.kind !== "TRACK" || (right.kind === "TRACK" && left.progress === right.progress)); }
+const delay = (milliseconds: number) => new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
 
 export function GamePanel({ activityId, game, progress }: { activityId: string; game: GameDto; progress: { accepted: number; target: number; extra: number } }) {
-  const router = useRouter(); const [state, action, pending] = useActionState(rollGameAction, initial); const [clientActionId] = useState(() => crypto.randomUUID()); const [online, setOnline] = useState(true);
+  const router = useRouter();
+  const [rollState, rollAction, rollPending] = useActionState(rollGameAction, initial);
+  const [moveState, moveAction, movePending] = useActionState(moveGameAction, initial);
+  const [online, setOnline] = useState(true);
+  const [diceOverlay, setDiceOverlay] = useState<DiceOverlayState | null>(null);
+  const [displayPieces, setDisplayPieces] = useState<PieceState[]>(game.pieces);
+  const [movingPieceId, setMovingPieceId] = useState<string | null>(null);
+  const [dismissedFeedbackRevision, setDismissedFeedbackRevision] = useState<number | null>(null);
+  const displayedRef = useRef(displayPieces);
+  const serverPiecesRef = useRef(game.pieces);
+  const handledEvents = useRef(new Set<string>());
+  const animationQueue = useRef(Promise.resolve());
+
+  const updateDisplayed = useCallback((updater: (pieces: PieceState[]) => PieceState[]) => { const next = updater(displayedRef.current); displayedRef.current = next; setDisplayPieces(next); }, []);
+  const animatePiece = useCallback(async (pieceId: string, to: PieceState["position"]) => {
+    const current = displayedRef.current.find((piece) => piece.id === pieceId);
+    if (!current || samePosition(current.position, to)) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setMovingPieceId(pieceId);
+    for (const position of movementSteps(current.position, to)) {
+      updateDisplayed((pieces) => pieces.map((piece) => piece.id === pieceId ? { ...piece, position } : piece));
+      if (!reducedMotion) await delay(170);
+    }
+    setMovingPieceId(null);
+  }, [updateDisplayed]);
+  const syncToServerProgressively = useCallback(() => {
+    animationQueue.current = animationQueue.current.then(async () => {
+      const targets = serverPiecesRef.current;
+      for (const player of ["STUDENT", "MACHINE"] as const) for (const target of targets.filter((piece) => piece.player === player)) {
+        const current = displayedRef.current.find((piece) => piece.id === target.id);
+        if (current && !samePosition(current.position, target.position)) await animatePiece(target.id, target.position);
+      }
+      displayedRef.current = targets.map((piece) => ({ ...piece, position: { ...piece.position } })); setDisplayPieces(displayedRef.current);
+    });
+  }, [animatePiece]);
+
+  useEffect(() => { serverPiecesRef.current = game.pieces; }, [game.pieces, game.revision]);
   useEffect(() => { const sync = () => setOnline(navigator.onLine); sync(); addEventListener("online", sync); addEventListener("offline", sync); return () => { removeEventListener("online", sync); removeEventListener("offline", sync); }; }, []);
   useEffect(() => { const refresh = () => router.refresh(); addEventListener("online", refresh); return () => removeEventListener("online", refresh); }, [router]);
-  const progressValue = Math.min(progress.accepted, progress.target); const percentage = Math.min(100, Math.round((progressValue / progress.target) * 100)); const canRoll = game.status === "ACTIVE" && ["WAITING_FIRST_EXIT", "STUDENT_ROLL", "RECOVERY_ROLL", "RECOVERY_RELEASE"].includes(game.phase);
-  return <section aria-labelledby="game-heading" className="space-y-4">{!online ? <p role="status" className="rounded-xl bg-amber-50 p-3 font-bold text-amber-900">Sem conexão. As ações estão desativadas; reconectaremos ao estado salvo quando a internet voltar.</p> : null}<div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-black uppercase text-brand">Partida salva</p><h1 id="game-heading" className="text-2xl font-black">Partida de Ludo</h1></div><span className="rounded-full bg-blue-50 px-3 py-2 text-sm font-black text-brand">{phaseLabel(game)}</span></div><div className="grid gap-4 lg:grid-cols-[220px_minmax(280px,1fr)_300px]"><aside className="student-card order-2 p-4 lg:order-1"><p className="text-sm font-black uppercase text-brand">Sua missão</p><p className="mt-2 font-black">{progressValue} de {progress.target} desafios</p><div className="student-progress mt-2" role="progressbar" aria-label="Meta no jogo" aria-valuemin={0} aria-valuemax={progress.target} aria-valuenow={progressValue}><span style={{ width: `${percentage}%` }} /></div><p className="mt-2 text-sm text-muted">{progress.extra} resposta(s) adicional(is)</p><dl className="mt-5 grid grid-cols-2 gap-2 text-center"><div className="rounded-xl bg-blue-50 p-3"><dt className="text-xs font-bold text-muted">Nesta partida</dt><dd className="text-xl font-black text-brand">{game.points.game}</dd></div><div className="rounded-xl bg-blue-50 p-3"><dt className="text-xs font-bold text-muted">Na atividade</dt><dd className="text-xl font-black text-brand">{game.points.activity}</dd></div></dl><div className="mt-4 rounded-xl bg-[#f5f8fd] p-3"><p className="font-black text-brand">{phaseLabel(game)}</p><p className="mt-1 text-sm text-muted">Revisão {game.revision} confirmada pelo servidor.</p></div>{game.errorCount ? <p className="mt-3 text-sm font-bold text-amber-900">Erros nesta sequência: {game.errorCount}. Próximo acerto vale {Math.max(1, 10 - 3 * game.errorCount)} ponto(s).</p> : null}<button onClick={() => router.refresh()} className="mt-4 min-h-11 w-full rounded-xl border border-border font-extrabold">Reconectar estado</button></aside><div className="order-1 min-w-0 lg:order-2"><StudentGameBoard game={game} /></div><aside className="student-card order-3 p-4"><p className="text-sm font-black uppercase text-brand">Sua jogada</p>{game.status === "FINISHED" ? <div className="mt-4 text-center"><span aria-hidden="true" className="text-5xl">{game.winner === "STUDENT" ? "🏆" : "🎲"}</span><h2 className="mt-3 text-xl font-black">{game.winner === "STUDENT" ? "Parabéns, você venceu!" : "Partida concluída"}</h2><p className="mt-2 text-muted">Seu progresso e seus pontos já estão salvos.</p></div> : game.challenge ? <article><div className="mt-3 flex items-center gap-4"><div className="student-die" aria-label={`Dado ${game.challenge.dice}`}>{game.challenge.dice}</div><div><p className="text-sm font-black">Carta do desafio</p><p className="text-muted">Dificuldade {game.challenge.difficulty}</p></div></div><p className="mt-4 text-xs font-black uppercase text-brand">Desafio{game.challenge.isRepeated ? " · questão repetida" : ""}</p>{game.challenge.prompt.image ? <Image src={game.challenge.prompt.image.url} alt={game.challenge.prompt.image.altText} width={640} height={320} unoptimized className="mt-3 max-h-52 w-full rounded-xl object-contain" /> : null}<h2 className="mt-2 text-lg font-black leading-7">{game.challenge.prompt.statement}</h2><SpeakButton text={[game.challenge.prompt.statement, ...game.challenge.prompt.options.map(({ text }) => text)].join(". ")} /><AnswerForm activityId={activityId} game={game} online={online} /></article> : game.phase === "MOVE_PENDING" ? <div className="mt-3"><Feedback game={game} /><h2 className="mt-4 font-black">Escolha o pino que deseja mover</h2><div className="mt-3 grid gap-2">{game.legalMoves.map((move) => <MoveForm key={move.pieceId} activityId={activityId} game={game} move={move} online={online} />)}</div></div> : <><Feedback game={game} />{canRoll ? <form action={action} className="mt-5 grid gap-3"><input type="hidden" name="activityId" value={activityId} /><input type="hidden" name="gameId" value={game.id} /><input type="hidden" name="clientActionId" value={clientActionId} /><input type="hidden" name="expectedRevision" value={game.revision} /><button disabled={pending || !online} className="student-primary w-full px-4">{pending ? "Aguarde..." : online ? "Jogar dado" : "Sem conexão"}</button><ActionMessage state={state} /></form> : <p role="status" className="mt-5 rounded-xl bg-slate-100 p-3 font-bold text-muted">Esta partida não aceita novas ações.</p>}</>}</aside></div></section>;
+
+  const beginStudentRoll = useCallback(() => { setDismissedFeedbackRevision(game.revision); setDiceOverlay({ owner: "STUDENT", face: 1 + Math.floor(Math.random() * 6), finalFace: null, revealed: false, startedAt: Date.now(), remainingMachineRolls: [] }); }, [game.revision]);
+  const beginMachineRolls = useCallback((rolls: Array<{ dice: number; pieceId: string | null }>) => { const [first, ...remaining] = rolls; if (!first) { syncToServerProgressively(); return; } setDiceOverlay({ owner: "MACHINE", face: 1 + Math.floor(Math.random() * 6), finalFace: first.dice, revealed: false, startedAt: Date.now(), remainingMachineRolls: remaining }); }, [syncToServerProgressively]);
+
+  useEffect(() => { const event = rollState.event; if (!event || event.kind !== "ROLL" || handledEvents.current.has(event.id)) return; handledEvents.current.add(event.id); setDiceOverlay((current) => current?.owner === "STUDENT" ? { ...current, finalFace: event.studentDice, remainingMachineRolls: event.machineRolls } : current); }, [rollState.event]);
+  useEffect(() => {
+    const event = moveState.event;
+    if (!event || event.kind !== "MOVE" || handledEvents.current.has(event.id)) return;
+    handledEvents.current.add(event.id);
+    const timeout = window.setTimeout(() => { if (event.machineRolls.length) beginMachineRolls(event.machineRolls); else syncToServerProgressively(); }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [beginMachineRolls, moveState.event, syncToServerProgressively]);
+  const diceSequenceKey = diceOverlay ? `${diceOverlay.owner}:${diceOverlay.startedAt}` : null;
+  useEffect(() => {
+    if (!diceSequenceKey) return;
+    const interval = window.setInterval(() => setDiceOverlay((current) => {
+      if (!current) return null;
+      const elapsed = Date.now() - current.startedAt;
+      if (current.finalFace !== null && elapsed >= 3000) {
+        return current.face === current.finalFace && current.revealed ? current : { ...current, face: current.finalFace, revealed: true };
+      }
+      return { ...current, face: 1 + Math.floor(Math.random() * 6) };
+    }), 90);
+    return () => window.clearInterval(interval);
+  }, [diceSequenceKey]);
+  useEffect(() => {
+    if (!diceOverlay || diceOverlay.finalFace === null || !diceOverlay.revealed) return;
+    const timeout = window.setTimeout(() => { const machineRolls = diceOverlay.remainingMachineRolls; const owner = diceOverlay.owner; setDiceOverlay(null); if (machineRolls.length) beginMachineRolls(machineRolls); else if (owner === "MACHINE" || !game.challenge) syncToServerProgressively(); }, 650);
+    return () => window.clearTimeout(timeout);
+  }, [beginMachineRolls, diceOverlay, game.challenge, syncToServerProgressively]);
+  useEffect(() => {
+    if (rollState.status !== "error" && moveState.status !== "error") return;
+    const timeout = window.setTimeout(() => { setDiceOverlay(null); setMovingPieceId(null); displayedRef.current = game.pieces; setDisplayPieces(game.pieces); }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [game.pieces, moveState.status, rollState.status]);
+  useEffect(() => { if (diceOverlay || rollPending || movePending || movingPieceId) return; if (rollState.status === "idle" && moveState.status === "idle") syncToServerProgressively(); }, [diceOverlay, game.revision, movePending, moveState.status, movingPieceId, rollPending, rollState.status, syncToServerProgressively]);
+
+  const onMoveStart = useCallback((move: PublicMove) => { animationQueue.current = animationQueue.current.then(() => animatePiece(move.pieceId, move.to)); }, [animatePiece]);
+  const progressValue = Math.min(progress.accepted, progress.target); const percentage = Math.min(100, Math.round((progressValue / progress.target) * 100));
+  const canRoll = game.status === "ACTIVE" && ["WAITING_FIRST_EXIT", "STUDENT_ROLL", "RECOVERY_ROLL", "RECOVERY_RELEASE"].includes(game.phase);
+  const showQuestion = Boolean(game.challenge) && !diceOverlay;
+  const showWrongFeedback = game.feedback?.outcome === "INCORRECT" && dismissedFeedbackRevision !== game.revision && !diceOverlay;
+
+  return <section aria-labelledby="game-heading" className="game-stage">
+    <h1 id="game-heading" className="sr-only">Partida de Ludo</h1>
+    <div className="game-topbar"><Link href={`/aluno/atividades/${activityId}`} className="game-back-link" aria-label="Voltar à missão"><Icon name="arrow-left" /></Link><div className="game-status-pill"><span className="game-status-dot" />{phaseLabel(game)}</div><button onClick={() => router.refresh()} className="game-refresh-button" aria-label="Reconectar estado"><span aria-hidden="true">↻</span></button></div>
+    {!online ? <p role="status" className="game-offline-banner">Sem conexão. As ações estão desativadas; reconectaremos ao estado salvo quando a internet voltar.</p> : null}
+    <div className="game-board-area">
+      <LudoBoard activityId={activityId} gameId={game.id} revision={game.revision} pieces={displayPieces} legalMoves={game.phase === "MOVE_PENDING" ? game.legalMoves : []} moveAction={moveAction} onMoveStart={onMoveStart} online={online && !movePending} movingPieceId={movingPieceId} />
+      <div className="game-hud game-hud-progress"><span className="game-hud-label">Missão</span><strong>{progressValue}/{progress.target}</strong><span className="game-hud-progress-bar"><span style={{ width: `${percentage}%` }} /></span></div>
+      <div className="game-hud game-hud-points"><span className="game-hud-label">Pontos</span><strong>{game.points.activity}</strong></div>
+      {game.errorCount ? <div className="game-hud game-hud-errors"><span className="game-hud-label">Próximo acerto</span><strong>+{Math.max(1, 10 - 3 * game.errorCount)}</strong></div> : null}
+      {canRoll && !showWrongFeedback && !diceOverlay ? <div className="game-roll-control"><RollForm key={game.revision} activityId={activityId} game={game} online={online} pending={rollPending} action={rollAction} onStart={beginStudentRoll} /></div> : null}
+      {game.phase === "MOVE_PENDING" ? <p role="status" className="game-move-instruction">Resposta correta! +{game.feedback?.awardedPoints ?? 0} pontos. Clique em um dos pinos que estão piscando.</p> : null}
+    </div>
+    {rollState.status === "error" ? <div className="game-action-error"><ActionMessage state={rollState} /></div> : null}{moveState.status === "error" ? <div className="game-action-error"><ActionMessage state={moveState} /></div> : null}
+    {diceOverlay ? <DiceOverlay state={diceOverlay} /> : null}
+    {showQuestion && game.challenge ? <Modal title={game.challenge.prompt.statement} eyebrow={`Desafio · dificuldade ${game.challenge.difficulty}`}>{game.challenge.isRepeated ? <p className="mb-2 text-sm font-bold text-warning">Esta questão já apareceu nesta partida.</p> : null}<AnswerForm key={game.challenge.id} activityId={activityId} game={game} online={online} /></Modal> : null}
+    {showWrongFeedback ? <Modal title="Ainda não. Vamos tentar outra vez!" eyebrow="Nova tentativa" tone="yellow"><Feedback game={game} />{canRoll ? <div className="mt-5"><RollForm key={`retry-${game.revision}`} activityId={activityId} game={game} online={online} pending={rollPending} action={rollAction} onStart={beginStudentRoll} label="Tentar novamente" /></div> : null}</Modal> : null}
+    {game.status === "FINISHED" && !diceOverlay ? <Modal title={game.winner === "STUDENT" ? "Você venceu a partida!" : "A máquina venceu desta vez"} eyebrow="Partida concluída" tone={game.winner === "STUDENT" ? "blue" : "yellow"}><div className="py-4 text-center"><span aria-hidden="true" className="text-6xl">{game.winner === "STUDENT" ? "🏆" : "🎲"}</span><p className="mt-4 font-bold text-muted">Seu progresso e seus pontos já estão salvos.</p><Link href={`/aluno/atividades/${activityId}`} className="student-primary mt-5 px-5">Voltar à missão</Link></div></Modal> : null}
+  </section>;
 }
 
-function Feedback({ game }: { game: GameDto }) { if (!game.feedback) return null; const correct = game.feedback.outcome === "CORRECT"; return <div role="status" className={`mt-3 rounded-xl p-4 ${correct ? "bg-emerald-50 text-emerald-950" : "bg-amber-50 text-amber-950"}`}><p className="font-black">{correct ? `Resposta correta! +${game.feedback.awardedPoints} pontos` : "Ainda não. Vamos recuperar!"}</p><p className="mt-2 text-sm">Resposta correta: <strong>{game.feedback.correctAnswer}</strong></p>{game.feedback.explanation ? <p className="mt-2 text-sm">{game.feedback.explanation}</p> : null}</div>; }
+function Feedback({ game }: { game: GameDto }) { if (!game.feedback) return null; const correct = game.feedback.outcome === "CORRECT"; return <div role="status" className={`rounded-xl p-4 ${correct ? "bg-emerald-50 text-emerald-950" : "bg-amber-50 text-amber-950"}`}><p className="font-black">{correct ? `Resposta correta! +${game.feedback.awardedPoints} pontos` : "Confira a resposta antes da nova tentativa."}</p><p className="mt-2 text-sm">Resposta correta: <strong>{game.feedback.correctAnswer}</strong></p>{game.feedback.explanation ? <p className="mt-2 text-sm">{game.feedback.explanation}</p> : null}</div>; }
