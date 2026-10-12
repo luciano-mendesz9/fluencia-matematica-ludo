@@ -18,7 +18,7 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run --config vitest.integration.config.mts",
     "test:e2e": "playwright test --project=chromium",
-    "test:e2e:all": "playwright test",
+    "test:e2e:all": "node scripts/playwright-all-projects.mjs",
     "test:e2e:ui": "playwright test --ui",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
@@ -44,6 +44,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "6.0.0",

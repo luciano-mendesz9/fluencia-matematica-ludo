@@ -54,7 +54,7 @@ test("tentativas repetidas exibem o estado de rate limit", async ({ page, contex
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     await expect(page.getByRole("button", { name: "Entrar" })).toBeEnabled();
     await page.getByLabel("E-mail ou código do aluno").fill(authFixtures.rateIdentifier);
-    await page.getByLabel("Senha").fill("senha-incorreta");
+    await page.getByLabel("Senha", { exact: true }).fill("senha-incorreta");
     const actionRequest = page.waitForRequest((request) => request.method() === "POST");
     await page.getByRole("button", { name: "Entrar" }).click();
     await (await actionRequest).response();

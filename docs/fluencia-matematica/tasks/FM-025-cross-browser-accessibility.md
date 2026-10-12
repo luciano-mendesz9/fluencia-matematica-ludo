@@ -1,6 +1,6 @@
 # FM-025 — Regressão cross-browser e acessibilidade
 
-**Ordem/fase:** 25/Qualidade | **Branch:** `task/FM-025-cross-browser-accessibility` | **Situação:** planejada
+**Ordem/fase:** 25/Qualidade | **Branch:** `task/FM-025-cross-browser-accessibility` | **Situação:** implementada e verificada tecnicamente; validação humana/publicação pendentes
 
 ## Objetivo/escopo
 

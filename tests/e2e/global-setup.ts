@@ -64,7 +64,7 @@ export default async function globalSetup() {
       authFixtures.schools.noMembership.email,
       authFixtures.schools.multiTeacher.email,
     ];
-    const taskEmails = [authFixtures.people.newTeacher.email, authFixtures.people.globalDeveloper.email];
+    const taskEmails = [authFixtures.people.newTeacher.email, authFixtures.people.globalDeveloper.email, authFixtures.people.accessibilityDeveloper.email];
     const cleanupEmails = [...schoolEmails, ...taskEmails];
     const schoolCodes = [
       authFixtures.schools.schoolA.code,
@@ -99,6 +99,11 @@ export default async function globalSetup() {
     await pool.query('DELETE FROM "SchoolMembership" WHERE "userId" = ANY($1::uuid[]) OR "schoolId" = ANY($2::uuid[])', [staleUserIds, staleSchoolIds]);
     await pool.query('DELETE FROM "School" WHERE "id" = ANY($1::uuid[])', [staleSchoolIds]);
     await pool.query('DELETE FROM "User" WHERE "id" = ANY($1::uuid[])', [staleUserIds]);
+
+    await pool.query(`
+      INSERT INTO "User" ("id", "name", "email", "normalizedEmail", "passwordHash", "globalRole", "status", "sessionVersion", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $3, $4, 'DEVELOPER', 'ACTIVE', 1, NOW(), NOW())
+    `, [randomUUID(), authFixtures.people.accessibilityDeveloper.name, authFixtures.people.accessibilityDeveloper.email, passwordHash]);
 
     for (const user of [
       authFixtures.schools.teacherOne,

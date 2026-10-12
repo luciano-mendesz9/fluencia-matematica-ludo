@@ -16,7 +16,7 @@ export default defineConfig({
   globalTeardown: "./tests/e2e/global-teardown.ts",
   use: {
     baseURL,
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },

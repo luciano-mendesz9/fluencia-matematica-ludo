@@ -1,14 +1,15 @@
 # Índice ordenado de tarefas
 
-Estado em 11/10/2026: FM-001–FM-016 estão **integradas** em `origin/main`; FM-016 entrou pela PR #8
+Estado em 12/10/2026: FM-001–FM-016 estão **integradas** em `origin/main`; FM-016 entrou pela PR #8
 (`fa5072d`). FM-017 está **verificada e publicada** em `task/FM-017-game-session-turns`; FM-018–020
 estão **verificadas e publicadas** no checkpoint encadeado `task/FM-018-answer-move-recovery`
 (`dcd314e`). FM-021 está **verificada e publicada** em `task/FM-021-monthly-ranking`.
 FM-017–021 estão integradas em `origin/main` (`289174f`). FM-022 está **integrada** em `origin/main`
 pela PR #13 (`66ea7b8`); a validação pedagógica dos limiares da OD-003 permanece pendente. FM-023
-está **integrada** em `origin/main` pela PR #14 (`5ba1660`). FM-024 está **implementada e publicada,
-com gates focados aprovados e regressões amplas preexistentes registradas** em
-`task/FM-024-pdf-xlsx-exports`; FM-025–027 permanecem **planejadas**.
+está **integrada** em `origin/main` pela PR #14 (`5ba1660`). FM-024 está **integrada** em
+`origin/main` pela PR #15 (`2a3a731`). FM-025 está **implementada e verificada tecnicamente** em
+`task/FM-025-cross-browser-accessibility`; validação humana, publicação e integração permanecem
+pendentes. FM-026–027 permanecem **planejadas**.
 Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |

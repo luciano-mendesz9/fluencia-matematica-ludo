@@ -13,7 +13,8 @@ let themeId = "";
 let studentId = "";
 const questionIds: string[] = [];
 
-test.beforeAll(async () => {
+test.beforeAll(async ({}, testInfo) => {
+  testInfo.setTimeout(90_000);
   const { pool } = createNeonTestPool();
   try {
     const located = await pool.query(`SELECT student."id" AS "studentId", teacher."id" AS "teacherId", school."id" AS "schoolId", class."id" AS "classId" FROM "User" student, "User" teacher, "School" school, "ClassGroup" class WHERE student."studentCode"=$1 AND teacher."normalizedEmail"=$2 AND school."externalCode"=$3 AND class."schoolId"=school."id" AND class."name"=$4`, [authFixtures.student.identifier, authFixtures.schools.teacherOne.email, authFixtures.schools.schoolA.code, authFixtures.people.classA]);
@@ -36,7 +37,8 @@ test.beforeAll(async () => {
   } finally { await pool.end(); }
 });
 
-test.afterAll(async () => {
+test.afterAll(async ({}, testInfo) => {
+  testInfo.setTimeout(90_000);
   const { pool } = createNeonTestPool();
   try {
     if (activityId) {
