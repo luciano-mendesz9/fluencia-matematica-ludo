@@ -12,8 +12,12 @@ describe("database environment guard", () => {
     expect(assertDatabaseEnvironmentConfiguration(safeEnvironment).appEnvId).toBe("fluencia-matematica-e2e");
   });
 
-  it("recusa produção e ambiente sem identificação positiva", () => {
-    expect(() => assertDatabaseEnvironmentConfiguration({ ...safeEnvironment, APP_ENV_ID: "production" })).toThrow(/produção recusada/);
+  it("aceita o identificador de produção e recusa identificadores genéricos ou ausentes", () => {
+    expect(assertDatabaseEnvironmentConfiguration({
+      ...safeEnvironment,
+      APP_ENV_ID: "fluencia-matematica-production",
+    }).appEnvId).toBe("fluencia-matematica-production");
+    expect(() => assertDatabaseEnvironmentConfiguration({ ...safeEnvironment, APP_ENV_ID: "production" })).toThrow(/allowlist/);
     expect(() => assertDatabaseEnvironmentConfiguration({ ...safeEnvironment, APP_ENV_ID: undefined })).toThrow(/APP_ENV_ID não definida/);
   });
 

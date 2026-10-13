@@ -2,6 +2,7 @@ const allowedEnvironmentIds = [
   "fluencia-matematica-development",
   "fluencia-matematica-test",
   "fluencia-matematica-e2e",
+  "fluencia-matematica-production",
 ] as const;
 
 type AllowedEnvironmentId = (typeof allowedEnvironmentIds)[number];
@@ -51,7 +52,7 @@ function logicalHost(hostname: string) {
 export function assertDatabaseEnvironmentConfiguration(input: EnvironmentInput): DatabaseEnvironment {
   const appEnvId = required(input.APP_ENV_ID, "APP_ENV_ID");
   if (!allowedEnvironmentIds.includes(appEnvId as AllowedEnvironmentId)) {
-    throw new Error("[database] APP_ENV_ID não pertence à allowlist de desenvolvimento/teste; produção recusada.");
+    throw new Error("[database] APP_ENV_ID não pertence à allowlist de ambientes autorizados.");
   }
 
   const databaseUrl = required(input.DATABASE_URL, "DATABASE_URL");
