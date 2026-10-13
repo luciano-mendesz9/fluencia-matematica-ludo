@@ -31,7 +31,8 @@ test("SEMED cadastra escola, cria vínculo individual e o professor acessa o con
   await expect(page).toHaveURL(/\/selecionar-escola$/);
   await schoolCard(page, authFixtures.schools.created.name).getByRole("button", { name: "Acessar escola" }).click();
   await expect(page).toHaveURL(/\/professor$/);
-  await expect(page.getByRole("heading", { name: `Área do professor — ${authFixtures.schools.created.name}` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Olá, ${authFixtures.schools.linkCandidate.name}.` })).toBeVisible();
+  await expect(page.getByText(`Organize suas turmas, questões e atividades em ${authFixtures.schools.created.name}.`)).toBeVisible();
 });
 
 test("professor alterna escolas e recupera a preferência local após novo login", async ({ page, context }) => {
@@ -40,18 +41,18 @@ test("professor alterna escolas e recupera a preferência local após novo login
   await expect(page).toHaveURL(/\/selecionar-escola$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await schoolCard(page, authFixtures.schools.schoolA.name).getByRole("button", { name: "Acessar escola" }).click();
-  await expect(page.getByRole("heading", { name: `Área do professor — ${authFixtures.schools.schoolA.name}` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Olá, ${authFixtures.schools.teacherOne.name}.` })).toBeVisible();
 
   await page.locator('select[name="schoolId"]:visible').selectOption({ label: authFixtures.schools.schoolB.name });
   await page.locator('button:visible', { hasText: "Trocar" }).click();
-  await expect(page.getByRole("heading", { name: `Área do professor — ${authFixtures.schools.schoolB.name}` })).toBeVisible();
+  await expect(page.getByText(`Organize suas turmas, questões e atividades em ${authFixtures.schools.schoolB.name}.`)).toBeVisible();
   const storedPreference = await page.evaluate(() => Object.entries(localStorage).find(([key]) => key.startsWith("school:"))?.[1]);
   expect(storedPreference).toBeTruthy();
 
   await page.getByRole("button", { name: "Sair" }).click();
   await context.clearCookies();
   await login(page, authFixtures.schools.teacherOne.email);
-  await expect(page.getByRole("heading", { name: `Área do professor — ${authFixtures.schools.schoolB.name}` })).toBeVisible();
+  await expect(page.getByText(`Organize suas turmas, questões e atividades em ${authFixtures.schools.schoolB.name}.`)).toBeVisible();
 });
 
 test("preferência e cookie de outra conta não elevam o contexto", async ({ page }) => {
@@ -65,7 +66,8 @@ test("preferência e cookie de outra conta não elevam o contexto", async ({ pag
   await expect(page.getByText(authFixtures.schools.schoolA.name)).toHaveCount(0);
   await expect(page.getByText(authFixtures.schools.schoolC.name)).toBeVisible();
   await schoolCard(page, authFixtures.schools.schoolC.name).getByRole("button", { name: "Acessar escola" }).click();
-  await expect(page.getByRole("heading", { name: `Área do professor — ${authFixtures.schools.schoolC.name}` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Olá, ${authFixtures.schools.teacherTwo.name}.` })).toBeVisible();
+  await expect(page.getByText(`Organize suas turmas, questões e atividades em ${authFixtures.schools.schoolC.name}.`)).toBeVisible();
 });
 
 test("cookie adulterado e acesso direto não substituem vínculo válido", async ({ page, context }) => {
@@ -85,7 +87,8 @@ test("conta sem vínculo vê estado vazio e coordenador entra somente em sua esc
   await login(page, authFixtures.schools.coordinator.email);
   await schoolCard(page, authFixtures.schools.schoolA.name).getByRole("button", { name: "Acessar escola" }).click();
   await expect(page).toHaveURL(/\/escola$/);
-  await expect(page.getByRole("heading", { name: `Coordenação — ${authFixtures.schools.schoolA.name}` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: authFixtures.schools.schoolA.name })).toBeVisible();
+  await expect(page.getByText("Gerencie a estrutura e as pessoas da escola selecionada com o contexto validado no servidor.")).toBeVisible();
 });
 
 test("revogação passa a valer no próximo request e remove a escola disponível", async ({ browser }) => {

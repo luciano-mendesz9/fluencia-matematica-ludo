@@ -91,8 +91,8 @@ function persistSelection(state: SchoolSelectionState, router: ReturnType<typeof
   localStorage.setItem(`school:${state.userId}`, state.schoolId);
   localStorage.removeItem(`class:${state.userId}`);
   localStorage.removeItem(`filters:${state.userId}`);
-  router.replace(state.redirect);
-  router.refresh();
+  if (window.location.pathname === state.redirect) router.refresh();
+  else router.replace(state.redirect);
 }
 
 export function SchoolSelection({ userId, schools }: { userId: string; schools: SchoolOptionDto[] }) {

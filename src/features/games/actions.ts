@@ -7,7 +7,13 @@ import { requireUser } from "@/src/server/auth/policies";
 import { answerGame, moveGame, rollGame, startOrResumeGame } from "@/src/server/games/service";
 import { gameAnswerSchema, gameMoveSchema, gameRollSchema, gameStartSchema } from "./schemas";
 
-export type GameActionState = { status: "idle" | "success" | "error"; message?: string };
+export type GameActionState = {
+  status: "idle" | "success" | "error";
+  message?: string;
+  event?:
+    | { id: string; kind: "ROLL"; studentDice: number; machineRolls: Array<{ dice: number; pieceId: string | null }> }
+    | { id: string; kind: "MOVE"; movedPieceId: string; machineRolls: Array<{ dice: number; pieceId: string | null }> };
+};
 const errorState = (error: unknown, fallback: string): GameActionState => ({
   status: "error",
   message: error instanceof AuthorizationError ? error.message : fallback,
@@ -36,7 +42,7 @@ export async function rollGameAction(_state: GameActionState, data: FormData): P
           ? `Dado ${result.roll.studentDice}: não há conteúdo disponível para esta dificuldade.`
           : `Dado ${result.roll.studentDice}: turno concluído sem desafio.`;
     revalidatePath(`/aluno/atividades/${data.get("activityId")}`);
-    return { status: "success", message };
+    return { status: "success", message, event: { id: parsed.data.clientActionId, kind: "ROLL", studentDice: result.roll.studentDice, machineRolls: result.roll.machineRolls } };
   } catch (error) {
     revalidatePath(`/aluno/atividades/${data.get("activityId")}`);
     return errorState(error, "Não foi possível lançar o dado.");
@@ -64,7 +70,7 @@ export async function moveGameAction(_state: GameActionState, data: FormData): P
     const result = await moveGame({ actor: await requireUser(), ...parsed.data });
     revalidatePath(`/aluno/atividades/${data.get("activityId")}`);
     revalidatePath(`/aluno/atividades/${data.get("activityId")}/jogo`);
-    return { status: "success", message: result.victoryBonus ? "Vitória! Bônus de 30 pontos concedido." : result.capturedPieceIds.length ? "Movimento concluído com captura." : "Movimento concluído." };
+    return { status: "success", message: result.victoryBonus ? "Vitória! Bônus de 30 pontos concedido." : result.capturedPieceIds.length ? "Movimento concluído com captura." : "Movimento concluído.", event: { id: parsed.data.clientActionId, kind: "MOVE", movedPieceId: result.movedPieceId, machineRolls: result.machineRolls } };
   } catch (error) {
     revalidatePath(`/aluno/atividades/${data.get("activityId")}/jogo`);
     return errorState(error, "Não foi possível mover o pino.");

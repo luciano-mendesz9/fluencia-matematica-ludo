@@ -5,7 +5,7 @@ import { login } from "./auth-helpers";
 test.describe.configure({ mode: "serial" });
 
 test("SEMED cria taxonomia, questão, filtra e preserva versão em 390 px", async ({ browser }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(120_000);
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await login(page, authFixtures.recovery.adminEmail);

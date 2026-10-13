@@ -55,5 +55,6 @@ export const authFixtures = {
     classB: "Turma FM-009 Branca",
     newTeacher: { email: "fm009.novo-professor@example.invalid", name: "Professor FM-009 Novo", password: "Senha-Professor-FM009-2026" },
     globalDeveloper: { email: "fm009.desenvolvedor@example.invalid", name: "Desenvolvedor FM-009", password: "Senha-Developer-FM009-2026" },
+    accessibilityDeveloper: { email: "fm025.desenvolvedor@example.invalid", name: "Desenvolvedor FM-025" },
   },
 } as const;

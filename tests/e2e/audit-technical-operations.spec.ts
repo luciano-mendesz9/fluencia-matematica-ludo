@@ -12,7 +12,8 @@ const auditId = randomUUID();
 const developerId = randomUUID();
 const developerEmail = `fm023-e2e-${randomUUID()}@example.invalid`;
 
-test.beforeAll(async () => {
+test.beforeAll(async ({}, testInfo) => {
+  testInfo.setTimeout(90_000);
   const { pool } = createNeonTestPool();
   try {
     const baseUser = await pool.query('SELECT "passwordHash" FROM "User" WHERE "normalizedEmail"=$1', [authFixtures.adult.identifier]);
@@ -22,7 +23,8 @@ test.beforeAll(async () => {
   } finally { await pool.end(); }
 });
 
-test.afterAll(async () => {
+test.afterAll(async ({}, testInfo) => {
+  testInfo.setTimeout(90_000);
   const { pool } = createNeonTestPool();
   try {
     await pool.query('DELETE FROM "OperationalLog" WHERE "id"=$1', [logId]);

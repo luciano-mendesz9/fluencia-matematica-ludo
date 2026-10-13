@@ -13,7 +13,8 @@ let themeId = "";
 let studentId = "";
 const questionIds: string[] = [];
 
-test.beforeAll(async () => {
+test.beforeAll(async ({}, testInfo) => {
+  testInfo.setTimeout(90_000);
   const { pool } = createNeonTestPool();
   try {
     const located = await pool.query(`SELECT student."id" AS "studentId", teacher."id" AS "teacherId", school."id" AS "schoolId", class."id" AS "classId" FROM "User" student, "User" teacher, "School" school, "ClassGroup" class WHERE student."studentCode"=$1 AND teacher."normalizedEmail"=$2 AND school."externalCode"=$3 AND class."schoolId"=school."id" AND class."name"=$4`, [authFixtures.student.identifier, authFixtures.schools.teacherOne.email, authFixtures.schools.schoolA.code, authFixtures.people.classA]);
@@ -36,7 +37,8 @@ test.beforeAll(async () => {
   } finally { await pool.end(); }
 });
 
-test.afterAll(async () => {
+test.afterAll(async ({}, testInfo) => {
+  testInfo.setTimeout(90_000);
   const { pool } = createNeonTestPool();
   try {
     if (activityId) {
@@ -60,7 +62,7 @@ test.afterAll(async () => {
 });
 
 test("retoma desafio e movimento, reconcilia duas abas e bloqueia ações offline", async ({ browser }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(240_000);
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await loginAsStudent(page);
@@ -68,18 +70,29 @@ test("retoma desafio e movimento, reconcilia duas abas e bloqueia ações offlin
   await page.goto(`/aluno/atividades/${activityId}`);
   await page.getByRole("button", { name: "Iniciar partida" }).click();
   await expect(page).toHaveURL(new RegExp(`/aluno/atividades/${activityId}/jogo`));
-  for (let attempt = 0; attempt < 50 && await page.getByText(/Digite o número [1-6]\./).count() === 0; attempt += 1) {
-    await page.getByRole("button", { name: "Jogar dado" }).click();
-    await expect(page.getByRole("button", { name: "Aguarde..." })).toHaveCount(0, { timeout: 15_000 });
-  }
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
   const statement = page.getByText(/Digite o número [1-6]\./);
+  for (let attempt = 0; attempt < 50 && await statement.count() === 0; attempt += 1) {
+    await page.getByRole("button", { name: "Jogar dado" }).click();
+    await expect(page.getByRole("heading", { name: "Girando o seu dado…" })).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/^Resultado:/)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Jogar dado" }).or(statement)).toBeVisible({ timeout: 45_000 });
+  }
   await expect(statement).toBeVisible();
   const answer = (await statement.textContent())!.match(/[1-6]/)![0];
   await page.reload();
   await expect(page.getByText(`Digite o número ${answer}.`)).toBeVisible();
-  await page.getByLabel("Sua resposta").fill(answer);
+  await page.getByLabel("Sua resposta").fill(String(Number(answer) + 10));
   await page.getByRole("button", { name: "Confirmar resposta" }).click();
-  await expect(page.getByText(/Resposta correta! \+10 pontos/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ainda não. Vamos tentar outra vez!" })).toBeVisible();
+  await expect(page.getByText(`Resposta correta: ${answer}`)).toBeVisible();
+  await page.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(page.getByRole("heading", { name: "Girando o seu dado…" })).toBeVisible();
+  await expect(statement).toBeVisible({ timeout: 15_000 });
+  const retryAnswer = (await statement.textContent())!.match(/[1-6]/)![0];
+  await page.getByLabel("Sua resposta").fill(retryAnswer);
+  await page.getByRole("button", { name: "Confirmar resposta" }).click();
+  await expect(page.getByText(/Resposta correta! \+7 pontos/)).toBeVisible();
   await expect(page.getByText("Escolha o pino que deseja mover")).toBeVisible();
   await page.reload();
   await expect(page.getByText("Escolha o pino que deseja mover")).toBeVisible();
@@ -88,10 +101,12 @@ test("retoma desafio e movimento, reconcilia duas abas e bloqueia ações offlin
   await second.goto(page.url());
   await expect(second.getByRole("button", { name: /Mover pino/ }).first()).toBeVisible();
   await page.getByRole("button", { name: /Mover pino/ }).first().click();
-  await expect(page.getByRole("button", { name: "Jogar dado" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "A máquina está jogando…" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("dialog").getByText(/^Resultado:/)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Jogar dado" })).toBeVisible({ timeout: 60_000 });
   await second.getByRole("button", { name: /Mover pino/ }).first().click();
-  await expect(second.getByRole("button", { name: "Jogar dado" })).toBeVisible();
-  await expect(second.getByText("10", { exact: true }).first()).toBeVisible();
+  await expect(second.getByRole("button", { name: "Jogar dado" })).toBeVisible({ timeout: 20_000 });
+  await expect(second.getByText("7", { exact: true }).first()).toBeVisible();
 
   await context.setOffline(true);
   await expect(page.getByText(/Sem conexão\. As ações estão desativadas/)).toBeVisible();
@@ -99,10 +114,15 @@ test("retoma desafio e movimento, reconcilia duas abas e bloqueia ações offlin
   await context.setOffline(false);
   await expect(page.getByRole("button", { name: "Jogar dado" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
+  await page.setViewportSize({ width: 412, height: 915 });
+  await expect(page.getByRole("button", { name: "Jogar dado" })).toBeInViewport();
+  await expect(page.getByRole("region", { name: "Tabuleiro de Ludo" })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
   const { pool } = createNeonTestPool();
   try {
     const totals = await pool.query(`SELECT p."acceptedAnswers",p."correctAnswers",p."pointsBalance",COUNT(e."id")::int AS events,SUM(e."amount")::int AS points FROM "ActivityParticipation" p LEFT JOIN "PointEvent" e ON e."participationId"=p."id" WHERE p."activityId"=$1 AND p."studentId"=$2 GROUP BY p."id"`, [activityId, studentId]);
-    expect(totals.rows[0]).toMatchObject({ acceptedAnswers: 1, correctAnswers: 1, pointsBalance: 10, events: 1, points: 10 });
+    expect(totals.rows[0]).toMatchObject({ acceptedAnswers: 2, correctAnswers: 1, pointsBalance: 7, events: 1, points: 7 });
   } finally { await pool.end(); }
   await context.close();
 });
