@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { AuthorizationError } from "@/src/server/auth/errors";
 import { requireUser } from "@/src/server/auth/policies";
-import { closeActivity, createActivity, openActivity, updateActivity } from "@/src/server/activities/service";
+import { closeActivity, createActivity, openActivity, reopenActivity, updateActivity } from "@/src/server/activities/service";
 import { activityDraftSchema, activityLifecycleSchema, activityUpdateSchema } from "./schemas";
 
 export type ActivityActionState = { status: "idle" | "success" | "error"; message?: string; activityId?: string };
@@ -34,4 +34,10 @@ export async function closeActivityAction(_state: ActivityActionState, data: For
   const parsed = activityLifecycleSchema.safeParse(Object.fromEntries(data)); if (!parsed.success) return { status: "error", message: "Atividade ou revisão inválida." };
   try { const result = await closeActivity({ actor: await requireUser(), ...parsed.data }); revalidatePath("/atividades"); revalidatePath(`/atividades/${result.id}`); revalidatePath("/aluno"); revalidatePath(`/aluno/atividades/${result.id}`); return { status: "success", message: "Atividade encerrada. O progresso foi preservado." }; }
   catch (error) { return errorState(error, "Não foi possível encerrar a atividade."); }
+}
+
+export async function reopenActivityAction(_state: ActivityActionState, data: FormData): Promise<ActivityActionState> {
+  const parsed = activityLifecycleSchema.safeParse(Object.fromEntries(data)); if (!parsed.success) return { status: "error", message: "Atividade ou revisão inválida." };
+  try { const result = await reopenActivity({ actor: await requireUser(), ...parsed.data }); revalidatePath("/atividades"); revalidatePath(`/atividades/${result.id}`); revalidatePath("/aluno"); revalidatePath(`/aluno/atividades/${result.id}`); return { status: "success", message: "Atividade reaberta. Respostas e pontos anteriores foram preservados; novas partidas começam separadamente." }; }
+  catch (error) { return errorState(error, "Não foi possível reabrir a atividade."); }
 }

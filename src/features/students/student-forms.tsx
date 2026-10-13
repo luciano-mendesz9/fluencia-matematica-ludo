@@ -49,7 +49,7 @@ function ClassSelect({ classes, name = "classId", defaultValue }: { classes: Cla
   );
 }
 
-export function CreateStudentForm({ schoolId, classes }: { schoolId: string; classes: ClassOption[] }) {
+export function CreateStudentForm({ schoolId, classes, initialClassId }: { schoolId: string; classes: ClassOption[]; initialClassId?: string }) {
   const [state, action, pending] = useActionState(createStudentAction, initialState);
   if (classes.length === 0) {
     return <p className="rounded-control border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">Cadastre uma turma ativa em um ano letivo ativo antes de cadastrar alunos.</p>;
@@ -58,7 +58,7 @@ export function CreateStudentForm({ schoolId, classes }: { schoolId: string; cla
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={schoolId} />
       <Field label="Nome do aluno" name="name" autoComplete="name" maxLength={160} required />
-      <ClassSelect classes={classes} />
+      <ClassSelect classes={classes} defaultValue={initialClassId} />
       <Field label="Senha temporária" hint="Use pelo menos 12 caracteres, uma letra e um número." name="temporaryPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
       <Field label="Confirmar senha temporária" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
       <Result state={state} />

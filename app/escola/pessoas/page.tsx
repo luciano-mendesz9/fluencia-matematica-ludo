@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/src/components/layout/app-shell";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { schoolNavigation } from "@/src/features/academics/navigation";
@@ -8,37 +9,8 @@ import { requireArea } from "@/src/server/auth/guard";
 import { listClassGroups } from "@/src/server/academics/service";
 import { listSchoolAdults } from "@/src/server/people/service";
 import { listAvailableSchools } from "@/src/server/schools/service";
+import { listStudents } from "@/src/server/students/service";
 
-export default async function SchoolPeoplePage() {
-  const session = await requireArea("escola");
-  const school = session.schoolContext!;
-  const actor = { ...session.user };
-  const [memberships, classes, schools] = await Promise.all([
-    listSchoolAdults({ actor, schoolId: school.schoolId }),
-    listClassGroups({ actor, schoolId: school.schoolId }),
-    listAvailableSchools(session.user.id),
-  ]);
-  const activeClasses = classes.filter((group) => group.status === "ACTIVE" && group.academicYear.status === "ACTIVE");
-  return (
-    <AppShell areaLabel="Coordenação" currentUserLabel={session.user.name} navigation={schoolNavigation} accountAction={<LogoutForm />} contextAction={<SchoolSwitcher userId={session.user.id} schools={schools} currentSchoolId={school.schoolId} />} statusLabel={school.schoolName}>
-      <h1 className="text-3xl font-bold text-foreground">Pessoas e atribuições</h1>
-      <p className="mt-2 text-muted">Cadastre professores individualmente, reutilize contas existentes e limite o acesso às turmas atribuídas.</p>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-panel border border-border bg-surface p-5 sm:p-6" aria-labelledby="new-teacher-title">
-          <h2 id="new-teacher-title" className="text-xl font-bold text-foreground">Novo professor</h2>
-          <p className="mb-5 mt-2 text-sm text-muted">Cria a conta e o vínculo somente nesta escola.</p>
-          <CreateLocalAdultForm schoolId={school.schoolId} canManageCoordinators={false} />
-        </section>
-        <section className="rounded-panel border border-border bg-surface p-5 sm:p-6" aria-labelledby="link-teacher-title">
-          <h2 id="link-teacher-title" className="text-xl font-bold text-foreground">Professor já cadastrado</h2>
-          <p className="mb-5 mt-2 text-sm text-muted">Vincula as mesmas credenciais globais sem duplicar a conta.</p>
-          <LinkExistingAdultForm schoolId={school.schoolId} canManageCoordinators={false} />
-        </section>
-      </div>
-      <section className="mt-8" aria-labelledby="school-people-title">
-        <h2 id="school-people-title" className="text-2xl font-bold text-foreground">Pessoas da escola</h2>
-        <div className="mt-4"><SchoolPeopleList schoolId={school.schoolId} memberships={memberships} classes={activeClasses} canManageCoordinators={false} /></div>
-      </section>
-    </AppShell>
-  );
-}
+const tabs=[{id:"professores",label:"Professores"},{id:"coordenadores",label:"Coordenadores"},{id:"alunos",label:"Alunos"}] as const;
+
+export default async function SchoolPeoplePage({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}){const session=await requireArea("escola");const school=session.schoolContext!;const actor={...session.user};const [memberships,classes,schools,students,params]=await Promise.all([listSchoolAdults({actor,schoolId:school.schoolId}),listClassGroups({actor,schoolId:school.schoolId}),listAvailableSchools(session.user.id),listStudents({actor,schoolId:school.schoolId}),searchParams]);const requested=typeof params.tab==="string"?params.tab:"professores";const tab=tabs.some((item)=>item.id===requested)?requested:"professores";const activeClasses=classes.filter((group)=>group.status==="ACTIVE"&&group.academicYear.status==="ACTIVE");const visibleMemberships=memberships.filter((membership)=>tab==="professores"?membership.role==="TEACHER":membership.role==="COORDINATOR");return <AppShell areaLabel="Coordenação" currentUserLabel={session.user.name} navigation={schoolNavigation} accountAction={<LogoutForm/>} contextAction={<SchoolSwitcher userId={session.user.id} schools={schools} currentSchoolId={school.schoolId}/>} statusLabel={school.schoolName}><div className="space-y-8"><header><p className="text-sm font-bold uppercase tracking-[0.12em] text-brand">Gestão de pessoas</p><h1 className="mt-2 text-3xl font-bold">Pessoas</h1><p className="mt-2 max-w-3xl text-muted">Contas, vínculos e atribuições são conceitos separados. Alunos são administrados prioritariamente dentro das turmas.</p></header><nav aria-label="Tipos de pessoa" className="flex flex-wrap gap-2">{tabs.map((item)=><Link key={item.id} href={`/escola/pessoas?tab=${item.id}`} aria-current={tab===item.id?"page":undefined} className={`rounded-control px-4 py-3 font-bold ${tab===item.id?"bg-brand text-white":"border border-border bg-surface text-brand"}`}>{item.label}</Link>)}</nav>{tab==="professores"?<><div className="grid gap-6 lg:grid-cols-2"><section className="rounded-panel border border-border bg-surface p-5 sm:p-6"><h2 className="text-xl font-bold">Novo professor</h2><p className="mb-5 mt-2 text-sm text-muted">Cria conta e vínculo somente nesta escola.</p><CreateLocalAdultForm schoolId={school.schoolId} canManageCoordinators={false}/></section><section className="rounded-panel border border-border bg-surface p-5 sm:p-6"><h2 className="text-xl font-bold">Professor já cadastrado</h2><p className="mb-5 mt-2 text-sm text-muted">Vincula a conta global sem duplicar credenciais.</p><LinkExistingAdultForm schoolId={school.schoolId} canManageCoordinators={false}/></section></div><SchoolPeopleList schoolId={school.schoolId} memberships={visibleMemberships} classes={activeClasses} canManageCoordinators={false}/></>:tab==="coordenadores"?<><div className="rounded-panel border border-blue-200 bg-blue-50 p-5 text-sm text-blue-950"><h2 className="font-bold">Escopo protegido</h2><p className="mt-1">A coordenação pode consultar os vínculos de coordenação desta escola. Criar, suspender ou alterar coordenadores continua reservado à SEMED, conforme a política de autorização vigente.</p></div><SchoolPeopleList schoolId={school.schoolId} memberships={visibleMemberships} classes={activeClasses} canManageCoordinators={false}/></>:<section aria-labelledby="people-students-title"><div className="flex flex-wrap items-end justify-between gap-4"><div><h2 id="people-students-title" className="text-xl font-bold">Alunos</h2><p className="mt-1 text-sm text-muted">Consulta geral; ações de matrícula ficam na turma correspondente.</p></div><Link href="/escola/turmas" className="font-bold text-brand">Ir para turmas →</Link></div><div className="mt-4 overflow-x-auto rounded-panel border border-border bg-surface"><table className="min-w-full text-left text-sm"><thead className="bg-blue-50"><tr><th className="px-4 py-3">Aluno</th><th className="px-4 py-3">Turma atual</th><th className="px-4 py-3">Conta</th><th className="px-4 py-3"><span className="sr-only">Ação</span></th></tr></thead><tbody>{students.map((student)=><tr key={student.id} className="border-t border-border"><th className="px-4 py-3 font-semibold">{student.name}</th><td className="px-4 py-3">{student.activeEnrollment?.classGroup.name??"Sem matrícula ativa"}</td><td className="px-4 py-3">{student.status==="ACTIVE"?"Ativa":"Bloqueada"}</td><td className="px-4 py-3 text-right">{student.activeEnrollment?<Link href={`/escola/turmas/${student.activeEnrollment.classId}`} className="font-bold text-brand hover:underline">Abrir turma →</Link>:null}</td></tr>)}</tbody></table></div></section>}</div></AppShell>}

@@ -118,7 +118,7 @@ export async function updateActivity(input: { actor: AuthenticatedPrincipal; act
 
 export async function listTeacherActivities(input: { actor: AuthenticatedPrincipal; schoolId: string }) {
   const options = await listActivityAuthoringOptions(input); const classIds = options.classes.map(({ id }) => id);
-  return prisma.activity.findMany({ where: { teacherId: input.actor.id, schoolId: input.schoolId, classId: { in: classIds } }, select: { id: true, title: true, targetCount: true, status: true, revision: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } }, _count: { select: { questionVersions: true, participations: true } } }, orderBy: { createdAt: "desc" } });
+  return prisma.activity.findMany({ where: { teacherId: input.actor.id, schoolId: input.schoolId, classId: { in: classIds } }, select: { id: true, title: true, targetCount: true, status: true, revision: true, openedAt: true, closedAt: true, updatedAt: true, classGroup: { select: { name: true, grade: true } }, participations: { select: { acceptedAnswers: true, correctAnswers: true, targetReachedAt: true } }, _count: { select: { questionVersions: true, participations: true } } }, orderBy: { createdAt: "desc" } });
 }
 
 export async function getTeacherActivity(input: { actor: AuthenticatedPrincipal; activityId: string }) {
@@ -183,6 +183,50 @@ export async function closeActivity(input: { actor: AuthenticatedPrincipal; acti
     }
   }
   throw new AuthorizationError("STATE_CONFLICT", "Não foi possível encerrar a atividade após operações concorrentes.");
+}
+
+export async function reopenActivity(input: { actor: AuthenticatedPrincipal; activityId: string; revision: number; correlationId?: string }) {
+  uuid(input.activityId, "Atividade inválida."); validateRevision(input.revision);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const locked = await lockActivity(tx, input.activityId);
+        const activity = await teacherActivity(tx, input.actor, input.activityId);
+        if (locked.status !== "CLOSED") throw new AuthorizationError("STATE_CONFLICT", "A atividade não está encerrada.");
+        if (locked.revision !== input.revision) throw new AuthorizationError("STATE_CONFLICT", "A atividade foi alterada por outra operação.");
+        const now = new Date();
+        const enrollments = await tx.enrollment.findMany({
+          where: { classId: activity.classId, schoolId: activity.schoolId, status: "ACTIVE", ...activeWindow(now), student: { status: "ACTIVE", studentCode: { not: null }, globalRole: null } },
+          select: { id: true, studentId: true },
+        });
+        if (enrollments.length) {
+          await tx.activityParticipation.createMany({ data: enrollments.map(({ id, studentId }) => ({ activityId: activity.id, enrollmentId: id, studentId })), skipDuplicates: true });
+        }
+        const reopened = await tx.activity.update({
+          where: { id: activity.id },
+          data: { status: "OPEN", revision: { increment: 1 } },
+          select: { id: true, status: true, revision: true, openedAt: true, closedAt: true },
+        });
+        await tx.auditEvent.create({
+          data: {
+            actorId: input.actor.id,
+            schoolId: activity.schoolId,
+            action: "ACTIVITY_REOPENED",
+            targetType: "Activity",
+            targetId: activity.id,
+            correlationId: input.correlationId ?? randomUUID(),
+            before: { status: "CLOSED", revision: locked.revision, closedAt: activity.closedAt?.toISOString() ?? null },
+            after: { status: "OPEN", revision: reopened.revision, recipients: enrollments.length, suspendedGamesResumed: 0 },
+          },
+        });
+        return reopened;
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10000, timeout: 15000 });
+    } catch (error) {
+      if (attempt < 2 && typeof error === "object" && error && "code" in error && error.code === "P2034") continue;
+      mapWrite(error);
+    }
+  }
+  throw new AuthorizationError("STATE_CONFLICT", "Não foi possível reabrir a atividade após operações concorrentes.");
 }
 
 export async function recordAcceptedAnswer(input: { activityId: string; studentId: string; clientActionId: string; outcome: "CORRECT" | "INCORRECT" }) {

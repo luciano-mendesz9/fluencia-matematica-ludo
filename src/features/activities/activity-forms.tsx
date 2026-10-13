@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
-import { closeActivityAction, createActivityAction, openActivityAction, updateActivityAction, type ActivityActionState } from "./actions";
+import { closeActivityAction, createActivityAction, openActivityAction, reopenActivityAction, updateActivityAction, type ActivityActionState } from "./actions";
 
 const initial: ActivityActionState = { status: "idle" };
 type Classroom = { id: string; name: string; grade: number; academicYear: { year: number } };
@@ -33,7 +33,9 @@ export function ActivityEditor({ schoolId, classes, versions, activity }: { scho
   </form>;
 }
 
-export function LifecycleButton({ activityId, revision, mode, disabled }: { activityId: string; revision: number; mode: "open"|"close"; disabled?: boolean }) {
-  const [state, action, pending]=useActionState(mode==="open"?openActivityAction:closeActivityAction,initial);
-  return <form action={action} className="grid gap-2"><input type="hidden" name="activityId" value={activityId}/><input type="hidden" name="revision" value={revision}/><button disabled={pending||disabled} className={`min-h-11 rounded-control px-5 font-bold text-white disabled:opacity-60 ${mode==="open"?"bg-brand":"bg-danger"}`}>{pending?"Aguarde...":mode==="open"?"Abrir atividade":"Encerrar atividade"}</button>{state.message&&<p role={state.status==="error"?"alert":"status"} className="max-w-md text-sm">{state.message}</p>}</form>;
+export function LifecycleButton({ activityId, revision, mode, disabled }: { activityId: string; revision: number; mode: "open"|"close"|"reopen"; disabled?: boolean }) {
+  const selectedAction = mode === "open" ? openActivityAction : mode === "close" ? closeActivityAction : reopenActivityAction;
+  const [state, action, pending]=useActionState(selectedAction,initial);
+  const label = mode === "open" ? "Abrir atividade" : mode === "close" ? "Encerrar atividade" : "Reabrir atividade";
+  return <form action={action} className="grid gap-2"><input type="hidden" name="activityId" value={activityId}/><input type="hidden" name="revision" value={revision}/><button disabled={pending||disabled} className={`min-h-11 rounded-control px-5 font-bold text-white disabled:opacity-60 ${mode==="close"?"bg-danger":"bg-brand"}`}>{pending?"Aguarde...":label}</button>{state.message&&<p role={state.status==="error"?"alert":"status"} className="max-w-md text-sm">{state.message}</p>}</form>;
 }
