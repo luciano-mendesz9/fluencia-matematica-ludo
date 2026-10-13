@@ -225,7 +225,7 @@ export async function listSchoolAdults(input: { actor: AuthenticatedPrincipal; s
       startsAt: true,
       endsAt: true,
       revision: true,
-      user: { select: { id: true, name: true, email: true, status: true } },
+      user: { select: { id: true, name: true, email: true, status: true, revision: true } },
       teacherAssignments: {
         select: assignmentSelect,
         orderBy: { startsAt: "desc" },
@@ -330,6 +330,63 @@ export async function linkExistingAdult(input: {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   } catch (error) {
     mapWriteError(error, "Já existe um vínculo ativo dessa conta com a escola.");
+  }
+}
+
+export async function updateLocalTeacherProfile(input: {
+  actor: AuthenticatedPrincipal;
+  schoolId: string;
+  membershipId: string;
+  userRevision: number;
+  name: string;
+  email: string;
+  correlationId?: string;
+}) {
+  const name = cleanName(input.name);
+  validateName(name);
+  validateRevision(input.userRevision);
+  const email = adultEmail(input.email);
+  if (!isUuid(input.membershipId)) throw new AuthorizationError("NOT_FOUND", "Vínculo de professor não encontrado.");
+  try {
+    return await prisma.$transaction(async (transaction) => {
+      const authorization = await authorizeSchoolPeopleManager(transaction, input.actor, input.schoolId);
+      const membership = await transaction.schoolMembership.findFirst({
+        where: { id: input.membershipId, schoolId: input.schoolId, role: "TEACHER", status: "ACTIVE" },
+        select: {
+          id: true,
+          role: true,
+          user: { select: { id: true, name: true, email: true, revision: true, studentCode: true, globalRole: true } },
+        },
+      });
+      if (!membership || membership.user.studentCode || membership.user.globalRole) {
+        throw new AuthorizationError("NOT_FOUND", "Vínculo ativo de professor não encontrado nesta escola.");
+      }
+      assertLocalRoleAllowed(authorization.managerRole, membership.role);
+      const changed = await transaction.user.updateMany({
+        where: { id: membership.user.id, revision: input.userRevision },
+        data: { name, email, normalizedEmail: email, revision: { increment: 1 } },
+      });
+      if (changed.count !== 1) throw new AuthorizationError("STATE_CONFLICT", "O cadastro do professor foi alterado por outra operação.");
+      const after = await transaction.user.findUniqueOrThrow({
+        where: { id: membership.user.id },
+        select: { id: true, name: true, email: true, revision: true },
+      });
+      await transaction.auditEvent.create({
+        data: {
+          actorId: input.actor.id,
+          action: "LOCAL_TEACHER_PROFILE_UPDATED",
+          targetType: "User",
+          targetId: after.id,
+          schoolId: input.schoolId,
+          correlationId: input.correlationId ?? randomUUID(),
+          before: { name: membership.user.name, email: membership.user.email, revision: membership.user.revision },
+          after: { name: after.name, email: after.email, revision: after.revision },
+        },
+      });
+      return after;
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (error) {
+    mapWriteError(error, "Já existe uma conta com este e-mail.");
   }
 }
 

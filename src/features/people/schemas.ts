@@ -49,6 +49,14 @@ export const linkExistingAdultSchema = z.object({
   role: z.enum(["COORDINATOR", "TEACHER"]),
 });
 
+export const updateLocalTeacherProfileSchema = z.object({
+  schoolId,
+  membershipId,
+  userRevision: revision,
+  name,
+  email,
+});
+
 export const suspendLocalMembershipSchema = z.object({
   schoolId,
   membershipId,

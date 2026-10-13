@@ -8,6 +8,7 @@ import {
   endEnrollmentAction,
   resetEnrolledStudentPasswordAction,
   transferStudentAction,
+  updateStudentAction,
   type StudentActionState,
 } from "./actions";
 
@@ -57,12 +58,36 @@ export function CreateStudentForm({ schoolId, classes, initialClassId }: { schoo
   return (
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={schoolId} />
-      <Field label="Nome do aluno" name="name" autoComplete="name" maxLength={160} required />
+      <Field label="Nome do aluno" name="name" placeholder="Ex.: Ana Beatriz da Silva" autoComplete="name" maxLength={160} required />
       <ClassSelect classes={classes} defaultValue={initialClassId} />
-      <Field label="Senha temporária" hint="Use pelo menos 12 caracteres, uma letra e um número." name="temporaryPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
-      <Field label="Confirmar senha temporária" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Senha temporária" hint="Use pelo menos 12 caracteres, uma letra e um número." name="temporaryPassword" type="password" placeholder="Crie uma senha temporária" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Confirmar senha temporária" name="confirmPassword" type="password" placeholder="Repita a senha temporária" autoComplete="new-password" minLength={12} maxLength={128} required />
       <Result state={state} />
       <Button type="submit" busy={pending}>Cadastrar aluno</Button>
+    </form>
+  );
+}
+
+export function EditStudentForm({ schoolId, student }: {
+  schoolId: string;
+  student: { id: string; name: string; status: "ACTIVE" | "BLOCKED"; revision: number };
+}) {
+  const [state, action, pending] = useActionState(updateStudentAction, initialState);
+  return (
+    <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
+      <input type="hidden" name="schoolId" value={schoolId} />
+      <input type="hidden" name="studentId" value={student.id} />
+      <input type="hidden" name="revision" value={student.revision} />
+      <Field label="Nome completo" name="name" defaultValue={student.name} placeholder="Ex.: Ana Beatriz da Silva" autoComplete="name" maxLength={160} required />
+      <label className="grid gap-2 font-semibold text-foreground">Situação da conta
+        <select name="status" defaultValue={student.status} className="min-h-11 rounded-control border border-border bg-surface px-3 py-2">
+          <option value="ACTIVE">Ativa</option>
+          <option value="BLOCKED">Bloqueada</option>
+        </select>
+      </label>
+      <p className="text-sm text-muted">Bloquear impede novos acessos e revoga as sessões abertas. O histórico escolar permanece intacto.</p>
+      <Result state={state} />
+      <Button type="submit" busy={pending}>Salvar alterações</Button>
     </form>
   );
 }
@@ -115,8 +140,8 @@ export function ResetStudentPasswordForm({ schoolId, studentId }: { schoolId: st
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={schoolId} />
       <input type="hidden" name="studentId" value={studentId} />
-      <Field label="Nova senha" name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
-      <Field label="Confirmar nova senha" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Nova senha" name="newPassword" type="password" placeholder="Digite a nova senha" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Confirmar nova senha" name="confirmPassword" type="password" placeholder="Repita a nova senha" autoComplete="new-password" minLength={12} maxLength={128} required />
       <Result state={state} />
       <Button type="submit" variant="secondary" busy={pending}>Redefinir senha</Button>
     </form>

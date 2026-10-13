@@ -27,8 +27,8 @@ export function CreateSchoolForm() {
   const [state, action, pending] = useActionState(createSchoolAction, initialState);
   return (
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
-      <Field label="Nome da escola" name="name" maxLength={160} required />
-      <Field label="Código externo" hint="Opcional e único na rede." name="externalCode" maxLength={80} />
+      <Field label="Nome da escola" name="name" placeholder="Ex.: EMEF Monte Azul" maxLength={160} required />
+      <Field label="Código externo" hint="Opcional e único na rede." name="externalCode" placeholder="Ex.: ESC-001" maxLength={80} />
       <Result state={state} />
       <Button type="submit" busy={pending}>Cadastrar escola</Button>
     </form>
@@ -41,8 +41,8 @@ export function EditSchoolForm({ school }: { school: { id: string; name: string;
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={school.id} />
       <input type="hidden" name="revision" value={school.revision} />
-      <Field label="Nome da escola" name="name" defaultValue={school.name} maxLength={160} required />
-      <Field label="Código externo" name="externalCode" defaultValue={school.externalCode ?? ""} maxLength={80} />
+      <Field label="Nome da escola" name="name" defaultValue={school.name} placeholder="Ex.: EMEF Monte Azul" maxLength={160} required />
+      <Field label="Código externo" name="externalCode" defaultValue={school.externalCode ?? ""} placeholder="Ex.: ESC-001" maxLength={80} />
       <label className="grid gap-2 font-semibold text-foreground">Situação
         <select name="status" defaultValue={school.status} className="min-h-11 rounded-control border border-border bg-surface px-3 py-2">
           <option value="ACTIVE">Ativa</option>
@@ -60,7 +60,7 @@ export function AddMembershipForm({ schoolId }: { schoolId: string }) {
   return (
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={schoolId} />
-      <Field label="E-mail da conta adulta" name="adultEmail" type="email" maxLength={320} required />
+      <Field label="E-mail da conta adulta" name="adultEmail" type="email" placeholder="nome@escola.edu.br" maxLength={320} required />
       <label className="grid gap-2 font-semibold text-foreground">Papel na escola
         <select name="role" defaultValue="TEACHER" className="min-h-11 rounded-control border border-border bg-surface px-3 py-2">
           <option value="TEACHER">Professor</option>

@@ -13,6 +13,7 @@ import {
   getStudent,
   listStudents,
   transferStudent,
+  updateStudent,
 } from "../../src/server/students/service";
 
 const suffix = randomUUID();
@@ -137,6 +138,22 @@ describe.sequential("students and enrollments against PostgreSQL", () => {
     expect(student.enrollments).toHaveLength(2);
     expect(student.enrollments.filter(({ status }) => status === "ACTIVE")).toHaveLength(1);
     expect((await prisma.user.findUniqueOrThrow({ where: { id: created.student.id }, select: { studentCode: true } })).studentCode).toBe(created.studentCode);
+  });
+
+  it("updates the student profile with audit, optimistic concurrency and reversible blocking", async () => {
+    const before = await getStudent({ actor: coordinator, schoolId: schoolAId, studentId: created.student.id });
+    const blocked = await updateStudent({ actor: coordinator, schoolId: schoolAId, studentId: created.student.id, name: "FM008 Aluno Atualizado", status: "BLOCKED", revision: before.revision });
+    expect(blocked).toMatchObject({ name: "FM008 Aluno Atualizado", status: "BLOCKED", revision: before.revision + 1 });
+    await expect(updateStudent({ actor: coordinator, schoolId: schoolAId, studentId: created.student.id, name: "FM008 Nome Concorrente", status: "ACTIVE", revision: before.revision }))
+      .rejects.toMatchObject({ code: "STATE_CONFLICT" });
+    const audit = await prisma.auditEvent.findFirst({ where: { action: "STUDENT_PROFILE_UPDATED", targetId: created.student.id }, orderBy: { at: "desc" } });
+    expect(audit).toMatchObject({ schoolId: schoolAId });
+    await expect(updateStudent({ actor: teacher, schoolId: schoolAId, studentId: created.student.id, name: "FM008 Sem Permissão", status: "ACTIVE", revision: blocked.revision }))
+      .rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(updateStudent({ actor: coordinator, schoolId: schoolBId, studentId: created.student.id, name: "FM008 Outra Escola", status: "ACTIVE", revision: blocked.revision }))
+      .rejects.toMatchObject({ code: "FORBIDDEN" });
+    const active = await updateStudent({ actor: coordinator, schoolId: schoolAId, studentId: created.student.id, name: blocked.name, status: "ACTIVE", revision: blocked.revision });
+    expect(active.status).toBe("ACTIVE");
   });
 
   it("authorizes coordinator reset only for the current school and ends logically without deleting history", async () => {

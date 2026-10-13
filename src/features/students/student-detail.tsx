@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { EndEnrollmentForm, ResetStudentPasswordForm, TransferStudentForm } from "./student-forms";
+import { Modal } from "@/src/components/ui/modal";
+import { EditStudentForm, EndEnrollmentForm, ResetStudentPasswordForm, TransferStudentForm } from "./student-forms";
 
 type ClassOption = {
   id: string;
@@ -31,6 +32,7 @@ export function StudentDetail({
     id: string;
     name: string;
     status: "ACTIVE" | "BLOCKED";
+    revision: number;
     enrollments: Enrollment[];
     activeEnrollment: Enrollment | null;
   };
@@ -45,8 +47,7 @@ export function StudentDetail({
   return (
     <>
       <Link href={backHref} className="font-semibold text-brand hover:text-brand-hover">← Voltar aos alunos</Link>
-      <h1 className="mt-5 text-3xl font-bold text-foreground">{student.name}</h1>
-      <p className="mt-2 text-muted">Conta {student.status === "ACTIVE" ? "ativa" : "bloqueada"}. O código de acesso não é exibido nesta tela.</p>
+      <div className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-bold text-foreground">{student.name}</h1><p className="mt-2 text-muted">Conta {student.status === "ACTIVE" ? "ativa" : "bloqueada"}. O código de acesso não é exibido nesta tela.</p></div>{student.activeEnrollment ? <Modal trigger="Editar aluno" title="Editar dados do aluno" description="Altere o nome e a situação da conta sem perder o histórico escolar." triggerVariant="secondary"><EditStudentForm schoolId={schoolId} student={student} /></Modal> : null}</div>
 
       {student.activeEnrollment ? (
         <section className="mt-6 rounded-panel border border-border bg-surface p-5 sm:p-6" aria-labelledby="current-enrollment-title">

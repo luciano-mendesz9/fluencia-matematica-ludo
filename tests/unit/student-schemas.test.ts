@@ -4,6 +4,7 @@ import {
   endEnrollmentSchema,
   resetEnrolledStudentPasswordSchema,
   transferStudentSchema,
+  updateStudentSchema,
 } from "../../src/features/students/schemas";
 
 const schoolId = "11111111-1111-4111-8111-111111111111";
@@ -33,6 +34,12 @@ describe("student and enrollment forms", () => {
     expect(endEnrollmentSchema.safeParse({ schoolId, studentId, enrollmentRevision: "0", confirmation: "yes" }).success).toBe(false);
     expect(endEnrollmentSchema.safeParse({ schoolId, studentId, enrollmentRevision: "1", confirmation: null }).success).toBe(false);
     expect(transferStudentSchema.safeParse({ schoolId, studentId: "aluno", targetClassId: classId, enrollmentRevision: "1" }).success).toBe(false);
+  });
+
+  it("validates full student profile updates", () => {
+    expect(updateStudentSchema.parse({ schoolId, studentId, revision: "3", name: "  Ana Souza  ", status: "BLOCKED" }))
+      .toEqual({ schoolId, studentId, revision: 3, name: "Ana Souza", status: "BLOCKED" });
+    expect(updateStudentSchema.safeParse({ schoolId, studentId, revision: "0", name: "A", status: "DELETED" }).success).toBe(false);
   });
 
   it("validates matching passwords for an enrolled student reset", () => {

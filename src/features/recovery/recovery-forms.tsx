@@ -30,7 +30,7 @@ export function RequestAdultResetForm() {
   const [state, action, pending] = useActionState(requestAdultResetAction, initialState);
   return (
     <form action={action} className="mt-8 grid gap-5" aria-busy={pending || undefined}>
-      <Field label="E-mail institucional" name="email" type="email" autoComplete="email" maxLength={320} required />
+      <Field label="E-mail institucional" name="email" type="email" placeholder="nome@escola.edu.br" autoComplete="email" maxLength={320} required />
       <Result state={state} />
       <Button type="submit" busy={pending}>Solicitar recuperação</Button>
     </form>
@@ -42,8 +42,8 @@ export function ConsumeResetForm({ token }: { token: string }) {
   return (
     <form action={action} className="mt-8 grid gap-5" aria-busy={pending || undefined}>
       <input type="hidden" name="token" value={token} />
-      <Field label="Nova senha" hint="Use ao menos 12 caracteres, uma letra e um número." name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
-      <Field label="Confirmar nova senha" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Nova senha" hint="Use ao menos 12 caracteres, uma letra e um número." name="newPassword" type="password" placeholder="Digite a nova senha" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Confirmar nova senha" name="confirmPassword" type="password" placeholder="Repita a nova senha" autoComplete="new-password" minLength={12} maxLength={128} required />
       <Result state={state} />
       <Button type="submit" busy={pending}>Alterar senha</Button>
       {state.status === "success" ? <Link className="font-semibold text-brand hover:text-brand-hover" href="/login">Ir para o login</Link> : null}
@@ -55,9 +55,9 @@ export function AssistedStudentResetForm() {
   const [state, action, pending] = useActionState(resetStudentPasswordAction, initialState);
   return (
     <form action={action} className="grid max-w-xl gap-5" aria-busy={pending || undefined}>
-      <Field label="Código do aluno" name="studentCode" type="text" autoComplete="off" autoCapitalize="characters" maxLength={80} required />
-      <Field label="Nova senha temporária" hint="Use ao menos 12 caracteres, uma letra e um número." name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
-      <Field label="Confirmar nova senha" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Código do aluno" name="studentCode" type="text" placeholder="Ex.: AL-1A2B3C4D" autoComplete="off" autoCapitalize="characters" maxLength={80} required />
+      <Field label="Nova senha temporária" hint="Use ao menos 12 caracteres, uma letra e um número." name="newPassword" type="password" placeholder="Crie uma senha temporária" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Confirmar nova senha" name="confirmPassword" type="password" placeholder="Repita a senha temporária" autoComplete="new-password" minLength={12} maxLength={128} required />
       <Result state={state} />
       <Button type="submit" busy={pending}>Redefinir senha</Button>
     </form>

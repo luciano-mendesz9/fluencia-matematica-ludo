@@ -5,6 +5,7 @@ import {
   createTeacherAssignmentSchema,
   endTeacherAssignmentSchema,
   suspendLocalMembershipSchema,
+  updateLocalTeacherProfileSchema,
 } from "../../src/features/people/schemas";
 
 const schoolId = "11111111-1111-4111-8111-111111111111";
@@ -28,6 +29,12 @@ describe("adult and teacher assignment forms", () => {
   it("requires a valid class and optional ISO date for assignment", () => {
     expect(createTeacherAssignmentSchema.parse({ schoolId, membershipId, classId, endsOn: "2027-12-31" })).toEqual({ schoolId, membershipId, classId, endsOn: "2027-12-31" });
     expect(createTeacherAssignmentSchema.safeParse({ schoolId, membershipId, classId, endsOn: "31/12/2027" }).success).toBe(false);
+  });
+
+  it("validates teacher profile updates with optimistic revision", () => {
+    expect(updateLocalTeacherProfileSchema.parse({ schoolId, membershipId, userRevision: "2", name: "  Professora Ana  ", email: "ANA@EXAMPLE.INVALID" }))
+      .toEqual({ schoolId, membershipId, userRevision: 2, name: "Professora Ana", email: "ANA@EXAMPLE.INVALID" });
+    expect(updateLocalTeacherProfileSchema.safeParse({ schoolId, membershipId, userRevision: "0", name: "A", email: "inválido" }).success).toBe(false);
   });
 
   it("requires explicit confirmation and optimistic revision for revocation", () => {

@@ -11,6 +11,7 @@ import {
   linkExistingAdultAction,
   suspendLocalMembershipAction,
   updateGlobalAdultStatusAction,
+  updateLocalTeacherProfileAction,
   type PeopleActionState,
 } from "./actions";
 
@@ -24,8 +25,8 @@ function Result({ state }: { state: PeopleActionState }) {
 function PasswordFields() {
   return (
     <>
-      <Field label="Senha temporária" hint="Use pelo menos 12 caracteres, uma letra e um número." name="temporaryPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
-      <Field label="Confirmar senha temporária" name="confirmPassword" type="password" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Senha temporária" hint="Use pelo menos 12 caracteres, uma letra e um número." name="temporaryPassword" type="password" placeholder="Crie uma senha temporária" autoComplete="new-password" minLength={12} maxLength={128} required />
+      <Field label="Confirmar senha temporária" name="confirmPassword" type="password" placeholder="Repita a senha temporária" autoComplete="new-password" minLength={12} maxLength={128} required />
     </>
   );
 }
@@ -46,8 +47,8 @@ export function CreateGlobalAdultForm() {
   const [state, action, pending] = useActionState(createGlobalAdultAction, initialState);
   return (
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
-      <Field label="Nome completo" name="name" autoComplete="name" maxLength={160} required />
-      <Field label="E-mail institucional" name="email" type="email" autoComplete="email" maxLength={320} required />
+      <Field label="Nome completo" name="name" placeholder="Ex.: Mariana Souza" autoComplete="name" maxLength={160} required />
+      <Field label="E-mail institucional" name="email" type="email" placeholder="nome@educacao.gov.br" autoComplete="email" maxLength={320} required />
       <label className="grid gap-2 font-semibold text-foreground">Papel global
         <select name="globalRole" defaultValue="DEVELOPER" className="min-h-11 rounded-control border border-border bg-surface px-3 py-2">
           <option value="DEVELOPER">Desenvolvedor</option>
@@ -86,8 +87,8 @@ export function CreateLocalAdultForm({ schoolId, canManageCoordinators }: { scho
   return (
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={schoolId} />
-      <Field label="Nome completo" name="name" autoComplete="name" maxLength={160} required />
-      <Field label="E-mail institucional" name="email" type="email" autoComplete="email" maxLength={320} required />
+      <Field label="Nome completo" name="name" placeholder="Ex.: Mariana Souza" autoComplete="name" maxLength={160} required />
+      <Field label="E-mail institucional" name="email" type="email" placeholder="nome@escola.edu.br" autoComplete="email" maxLength={320} required />
       <LocalRoleSelect canManageCoordinators={canManageCoordinators} />
       <PasswordFields />
       <Result state={state} />
@@ -101,10 +102,29 @@ export function LinkExistingAdultForm({ schoolId, canManageCoordinators }: { sch
   return (
     <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
       <input type="hidden" name="schoolId" value={schoolId} />
-      <Field id="existing-adult-email" label="E-mail da conta existente" hint="A busca não revela vínculos de outras escolas." name="email" type="email" autoComplete="email" maxLength={320} required />
+      <Field id="existing-adult-email" label="E-mail da conta existente" hint="A busca não revela vínculos de outras escolas." name="email" type="email" placeholder="nome@escola.edu.br" autoComplete="email" maxLength={320} required />
       <LocalRoleSelect canManageCoordinators={canManageCoordinators} />
       <Result state={state} />
       <Button type="submit" variant="secondary" busy={pending}>Vincular conta existente</Button>
+    </form>
+  );
+}
+
+export function EditLocalTeacherProfileForm({ schoolId, membership }: {
+  schoolId: string;
+  membership: { id: string; user: { name: string; email: string | null; revision: number } };
+}) {
+  const [state, action, pending] = useActionState(updateLocalTeacherProfileAction, initialState);
+  return (
+    <form action={action} className="grid gap-4" aria-busy={pending || undefined}>
+      <input type="hidden" name="schoolId" value={schoolId} />
+      <input type="hidden" name="membershipId" value={membership.id} />
+      <input type="hidden" name="userRevision" value={membership.user.revision} />
+      <Field label="Nome completo" name="name" defaultValue={membership.user.name} placeholder="Ex.: Mariana Souza" autoComplete="name" maxLength={160} required />
+      <Field label="E-mail institucional" name="email" type="email" defaultValue={membership.user.email ?? ""} placeholder="nome@escola.edu.br" autoComplete="email" maxLength={320} required />
+      <p className="text-sm text-muted">Esta é a identidade da conta do professor. A alteração também será refletida em outros vínculos que usem a mesma conta.</p>
+      <Result state={state} />
+      <Button type="submit" busy={pending}>Salvar dados do professor</Button>
     </form>
   );
 }

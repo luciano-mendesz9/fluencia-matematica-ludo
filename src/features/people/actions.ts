@@ -11,6 +11,7 @@ import {
   linkExistingAdult,
   suspendLocalMembership,
   updateGlobalAdultStatus,
+  updateLocalTeacherProfile,
 } from "@/src/server/people/service";
 import {
   createGlobalAdultSchema,
@@ -20,6 +21,7 @@ import {
   linkExistingAdultSchema,
   suspendLocalMembershipSchema,
   updateGlobalAdultStatusSchema,
+  updateLocalTeacherProfileSchema,
 } from "./schemas";
 
 export type PeopleActionState = { status: "idle" | "success" | "error"; message?: string };
@@ -115,6 +117,25 @@ export async function linkExistingAdultAction(_state: PeopleActionState, formDat
     return { status: "success", message: "Conta existente vinculada à escola." };
   } catch (error) {
     return { status: "error", message: publicError(error, "Não foi possível criar o vínculo.") };
+  }
+}
+
+export async function updateLocalTeacherProfileAction(_state: PeopleActionState, formData: FormData): Promise<PeopleActionState> {
+  const actor = await requireUser();
+  const parsed = updateLocalTeacherProfileSchema.safeParse({
+    schoolId: formData.get("schoolId"),
+    membershipId: formData.get("membershipId"),
+    userRevision: formData.get("userRevision"),
+    name: formData.get("name"),
+    email: formData.get("email"),
+  });
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  try {
+    await updateLocalTeacherProfile({ actor, ...parsed.data });
+    revalidatePeople(parsed.data.schoolId);
+    return { status: "success", message: "Dados do professor atualizados." };
+  } catch (error) {
+    return { status: "error", message: publicError(error, "Não foi possível atualizar o professor.") };
   }
 }
 

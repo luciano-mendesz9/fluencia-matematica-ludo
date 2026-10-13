@@ -84,6 +84,7 @@ export async function listStudents(input: { actor: AuthenticatedPrincipal; schoo
       id: true,
       name: true,
       status: true,
+      revision: true,
       enrollments: {
         where: { schoolId: input.schoolId },
         select: enrollmentSelect,
@@ -112,6 +113,7 @@ export async function getStudent(input: { actor: AuthenticatedPrincipal; schoolI
       id: true,
       name: true,
       status: true,
+      revision: true,
       enrollments: {
         where: { schoolId: input.schoolId },
         select: enrollmentSelect,
@@ -124,6 +126,71 @@ export async function getStudent(input: { actor: AuthenticatedPrincipal; schoolI
     ...student,
     activeEnrollment: student.enrollments.find((enrollment) => enrollment.status === "ACTIVE") ?? null,
   };
+}
+
+export async function updateStudent(input: {
+  actor: AuthenticatedPrincipal;
+  schoolId: string;
+  studentId: string;
+  name: string;
+  status: "ACTIVE" | "BLOCKED";
+  revision: number;
+  correlationId?: string;
+}) {
+  const name = cleanStudentName(input.name);
+  validateName(name);
+  validateRevision(input.revision);
+  if (!isUuid(input.studentId)) throw new AuthorizationError("NOT_FOUND", "Aluno não encontrado.");
+  try {
+    return await prisma.$transaction(async (transaction) => {
+      await authorizeSchoolManager(transaction, input.actor, input.schoolId);
+      const before = await transaction.user.findFirst({
+        where: {
+          id: input.studentId,
+          studentCode: { not: null },
+          enrollments: { some: { schoolId: input.schoolId, status: "ACTIVE" } },
+        },
+        select: { id: true, name: true, status: true, revision: true },
+      });
+      if (!before) throw new AuthorizationError("NOT_FOUND", "Aluno com matrícula ativa não encontrado nesta escola.");
+      const changed = await transaction.user.updateMany({
+        where: { id: before.id, revision: input.revision },
+        data: {
+          name,
+          status: input.status,
+          revision: { increment: 1 },
+          ...(input.status === "BLOCKED" && before.status !== "BLOCKED" ? { sessionVersion: { increment: 1 } } : {}),
+        },
+      });
+      if (changed.count !== 1) throw new AuthorizationError("STATE_CONFLICT", "O cadastro do aluno foi alterado por outra operação.");
+      if (input.status === "BLOCKED" && before.status !== "BLOCKED") {
+        await transaction.session.updateMany({ where: { userId: before.id, revokedAt: null }, data: { revokedAt: new Date() } });
+      }
+      const after = await transaction.user.findUniqueOrThrow({
+        where: { id: before.id },
+        select: { id: true, name: true, status: true, revision: true },
+      });
+      await transaction.auditEvent.create({
+        data: {
+          actorId: input.actor.id,
+          action: "STUDENT_PROFILE_UPDATED",
+          targetType: "User",
+          targetId: after.id,
+          schoolId: input.schoolId,
+          correlationId: input.correlationId ?? randomUUID(),
+          before: { name: before.name, status: before.status, revision: before.revision },
+          after: { name: after.name, status: after.status, revision: after.revision },
+        },
+      });
+      return after;
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (error) {
+    if (error instanceof AuthorizationError) throw error;
+    if (isPrismaCode(error, "P2034")) {
+      throw new AuthorizationError("STATE_CONFLICT", "O cadastro do aluno foi alterado por outra operação.");
+    }
+    throw error;
+  }
 }
 
 export async function createStudent(input: {

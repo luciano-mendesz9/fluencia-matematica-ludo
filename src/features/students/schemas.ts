@@ -18,6 +18,14 @@ export const createStudentSchema = z.object({
   path: ["confirmPassword"],
 });
 
+export const updateStudentSchema = z.object({
+  schoolId,
+  studentId,
+  revision,
+  name,
+  status: z.enum(["ACTIVE", "BLOCKED"], "Situação da conta inválida."),
+});
+
 export const transferStudentSchema = z.object({
   schoolId,
   studentId,

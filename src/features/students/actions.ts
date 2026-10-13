@@ -10,12 +10,14 @@ import {
   endEnrollment,
   getStudent,
   transferStudent,
+  updateStudent,
 } from "@/src/server/students/service";
 import {
   createStudentSchema,
   endEnrollmentSchema,
   resetEnrolledStudentPasswordSchema,
   transferStudentSchema,
+  updateStudentSchema,
 } from "./schemas";
 
 export type StudentActionState = {
@@ -26,6 +28,25 @@ export type StudentActionState = {
 
 function publicError(error: unknown, fallback: string) {
   return error instanceof AuthorizationError ? error.message : fallback;
+}
+
+export async function updateStudentAction(_state: StudentActionState, formData: FormData): Promise<StudentActionState> {
+  const parsed = updateStudentSchema.safeParse({
+    schoolId: formData.get("schoolId"),
+    studentId: formData.get("studentId"),
+    revision: formData.get("revision"),
+    name: formData.get("name"),
+    status: formData.get("status"),
+  });
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  try {
+    const actor = await requireUser();
+    await updateStudent({ actor, ...parsed.data });
+    revalidateStudentPaths(parsed.data.schoolId, parsed.data.studentId);
+    return { status: "success", message: "Cadastro do aluno atualizado." };
+  } catch (error) {
+    return { status: "error", message: publicError(error, "Não foi possível atualizar o aluno.") };
+  }
 }
 
 function revalidateStudentPaths(schoolId: string, studentId?: string) {
