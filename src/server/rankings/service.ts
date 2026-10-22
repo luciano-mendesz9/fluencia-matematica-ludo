@@ -1,5 +1,7 @@
 import "server-only";
 
+import { normalizeAvatar } from "@/src/domain/avatar";
+import { resolveRank } from "@/src/domain/gamification";
 import { currentMonthRange, rankStudents } from "@/src/domain/ranking";
 import { prisma } from "@/src/lib/prisma";
 import { AuthorizationError } from "@/src/server/auth/errors";
@@ -16,19 +18,31 @@ async function rankingForClass(input: { classId: string; now: Date; currentStude
       ...activeAt(input.now),
       student: { status: "ACTIVE", studentCode: { not: null }, globalRole: null },
     },
-    select: { studentId: true, student: { select: { name: true } } },
+    select: { studentId: true, student: { select: { name: true, studentProfile: { select: { skinTone: true, outfitColor: true, hairStyle: true, hairColor: true } } } } },
   });
   const studentIds = enrollments.map(({ studentId }) => studentId);
-  const totals = studentIds.length === 0 ? [] : await prisma.pointEvent.groupBy({
-    by: ["studentId"],
-    where: { classId: input.classId, studentId: { in: studentIds }, awardedAt: { gte: month.start, lt: month.end } },
-    _sum: { amount: true },
-  });
+  const [totals, lifetimeTotals, ranks] = await Promise.all([
+    studentIds.length === 0 ? Promise.resolve([]) : prisma.pointEvent.groupBy({
+      by: ["studentId"],
+      where: { classId: input.classId, studentId: { in: studentIds }, awardedAt: { gte: month.start, lt: month.end } },
+      _sum: { amount: true },
+    }),
+    studentIds.length === 0 ? Promise.resolve([]) : prisma.pointEvent.groupBy({
+      by: ["studentId"],
+      where: { studentId: { in: studentIds } },
+      _sum: { amount: true },
+    }),
+    prisma.studentRank.findMany({ orderBy: { level: "asc" } }),
+  ]);
+  const lifetimeByStudent = new Map(lifetimeTotals.map((total) => [total.studentId, total._sum.amount ?? 0]));
   return {
     monthLabel: month.label,
     timeZone: month.timeZone,
     entries: rankStudents(
-      enrollments.map(({ studentId, student }) => ({ id: studentId, name: student.name })),
+      enrollments.map(({ studentId, student }) => {
+        const rank = resolveRank(ranks, lifetimeByStudent.get(studentId) ?? 0).current;
+        return { id: studentId, name: student.name, avatar: normalizeAvatar(student.studentProfile), rankName: rank.name, rankIcon: rank.icon };
+      }),
       totals.map((total) => ({ studentId: total.studentId, points: total._sum.amount ?? 0 })),
       input.currentStudentId,
     ),

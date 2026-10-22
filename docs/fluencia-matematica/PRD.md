@@ -65,6 +65,10 @@ Metas numéricas de adesão e capacidade serão definidas após conhecer o taman
 - Meta de questões respondidas para cumprimento de cada atividade.
 - Prática adicional com pontuação após atingir a meta.
 - Ranking mensal da turma, sem histórico de classificações.
+- **[D — 22/10/2026]** Área do aluno com dez patentes, conquistas, sequência diária, vitrine de
+  minigames e avatar personalizável persistente.
+- **[D — 22/10/2026]** O Ludo é liberado somente por atividade aberta do professor; a vitrine exibe
+  somente Ludo e Corrida Matemática, esta bloqueada como jogo futuro sem simular implementação.
 - Cadastro individual de escolas e usuários.
 - Questões da SEMED e questões particulares dos professores.
 - Envio de questões particulares à SEMED para compartilhamento.
@@ -85,7 +89,8 @@ Metas numéricas de adesão e capacidade serão definidas após conhecer o taman
 
 - **[D]** Partidas offline e sincronização offline: requisito cancelado durante a elaboração.
 - **[D]** Importação de cadastros por planilha: primeira versão terá somente cadastro individual.
-- **[D]** Outros minigames e partidas entre alunos.
+- **[D]** Implementação jogável de outros minigames além do Ludo e partidas entre alunos. A vitrine
+  bloqueada dos jogos futuros integra a área do aluno, mas não equivale à implementação desses jogos.
 - **[D]** Histórico de rankings mensais.
 - **[D]** Jogo livre fora das atividades do professor.
 - **[P]** Chat, rede social, aplicativo nativo, geração automática de questões e feedbacks por IA generativa.

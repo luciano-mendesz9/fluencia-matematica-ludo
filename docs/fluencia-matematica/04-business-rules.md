@@ -27,6 +27,11 @@ servidor e testadas; propostas que bloqueiam tarefas aparecem em [decisões aber
 | BR-020 P | feedback exige evidência e não vira diagnóstico; abaixo do limiar = dados insuficientes | feedback / FM-022 | <5 distintas, habilidade divergente |
 | BR-021 D/P | PDF/XLSX usam os mesmos filtros/definições e escopo; planilha neutraliza fórmulas | export / FM-024 | nome `=...`, filtro e escola externa |
 | BR-022 P | auditoria preserva mutações administrativas; desenvolvedor não lê dado pedagógico individual | audit / FM-023 | alteração, tentativa proibida |
+| BR-023 D | patente deriva do XP imutável; Bronze=0, Prata=1 e cada promoção exige 50 XP | gamification / FM-028 | 0/49/50/100/450 XP |
+| BR-024 D | conquistas são avaliadas por fatos reais e registradas uma vez; leitura não remove conquista | gamification / FM-028 | retry, concorrência e limiares |
+| BR-025 D | sequência usa dias civis de Fortaleza com resposta aceita; hoje ou ontem mantém sequência | gamification / FM-028 | mesmo dia, virada e lacuna |
+| BR-026 D | minigame só é jogável com atividade aberta própria; catálogo futuro não simula liberação | activity/game / FM-028 | sem participação, aberta e fechada |
+| BR-027 D | aluno altera somente o próprio avatar com allowlist, revisão otimista e auditoria | profile / FM-028 | opção inválida, duas abas e adulto |
 
 Detalhes de pré-condição/estado de BR-012–018 estão em [Ludo](05-ludo-and-points.md); contratos de
 ator/rota em [fluxos](07-routes-and-user-flows.md). Aceite positivo, negativo e concorrente de cada

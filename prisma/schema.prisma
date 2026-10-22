@@ -145,6 +145,21 @@ enum OperationalLogLevel {
   ERROR
 }
 
+enum AchievementMetric {
+  TOTAL_XP
+  PODIUM_FINISH
+  DAILY_STREAK
+  CORRECT_STREAK
+  FIRST_PLACE
+  CORRECT_ANSWERS
+  RANK_LEVEL
+}
+
+enum MinigameStatus {
+  ACTIVE
+  COMING_SOON
+}
+
 model User {
   id              String       @id @default(uuid()) @db.Uuid
   name            String       @db.VarChar(160)
@@ -173,6 +188,8 @@ model User {
   createdActivities   Activity[] @relation("ActivityTeacher")
   activityParticipations ActivityParticipation[] @relation("ActivityStudent")
   pointEvents PointEvent[] @relation("PointStudent")
+  studentProfile StudentProfile?
+  achievements StudentAchievement[]
 
   @@index([status])
 }
@@ -517,6 +534,7 @@ model Activity {
   schoolId      String         @db.Uuid
   classId       String         @db.Uuid
   teacherId     String         @db.Uuid
+  minigameId    String?        @db.Uuid
   title         String         @db.VarChar(160)
   instructions  String?        @db.VarChar(1000)
   targetCount   Int
@@ -529,12 +547,14 @@ model Activity {
   school        School         @relation(fields: [schoolId], references: [id], onDelete: Restrict)
   classGroup    ClassGroup     @relation(fields: [classId, schoolId], references: [id, schoolId], onDelete: Restrict)
   teacher       User           @relation("ActivityTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  minigame      Minigame?      @relation(fields: [minigameId], references: [id], onDelete: Restrict)
   questionVersions ActivityQuestionVersion[]
   participations ActivityParticipation[]
   pointEvents PointEvent[]
 
   @@index([teacherId, schoolId, status, createdAt])
   @@index([classId, status, openedAt])
+  @@index([minigameId, status])
 }
 
 model ActivityQuestionVersion {
@@ -691,4 +711,73 @@ model PointEvent {
   @@index([classId, awardedAt, studentId])
   @@index([participationId, awardedAt])
   @@index([gameId, awardedAt])
+}
+
+model StudentRank {
+  id         String   @id @default(uuid()) @db.Uuid
+  code       String   @unique @db.VarChar(40)
+  name       String   @db.VarChar(80)
+  level      Int      @unique
+  xpRequired Int
+  icon       String   @db.VarChar(16)
+  accent     String   @db.VarChar(16)
+  sortOrder  Int      @unique
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([level, xpRequired])
+}
+
+model Achievement {
+  id          String            @id @default(uuid()) @db.Uuid
+  code        String            @unique @db.VarChar(60)
+  title       String            @db.VarChar(100)
+  description String            @db.VarChar(240)
+  metric      AchievementMetric
+  threshold   Int
+  icon        String            @db.VarChar(16)
+  sortOrder   Int               @unique
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now()) @db.Timestamptz(3)
+  students    StudentAchievement[]
+
+  @@index([active, sortOrder])
+}
+
+model StudentAchievement {
+  id            String      @id @default(uuid()) @db.Uuid
+  studentId     String      @db.Uuid
+  achievementId String      @db.Uuid
+  unlockedAt    DateTime    @default(now()) @db.Timestamptz(3)
+  student       User        @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, achievementId])
+  @@index([studentId, unlockedAt])
+}
+
+model StudentProfile {
+  studentId   String   @id @db.Uuid
+  skinTone    String   @default("medium") @db.VarChar(30)
+  outfitColor String   @default("ocean") @db.VarChar(30)
+  hairStyle   String   @default("curly") @db.VarChar(30)
+  hairColor   String   @default("dark") @db.VarChar(30)
+  revision    Int      @default(1)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Minigame {
+  id          String         @id @default(uuid()) @db.Uuid
+  slug        String         @unique @db.VarChar(60)
+  name        String         @db.VarChar(100)
+  description String         @db.VarChar(240)
+  icon        String         @db.VarChar(16)
+  status      MinigameStatus @default(COMING_SOON)
+  sortOrder   Int            @unique
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
+  activities  Activity[]
+
+  @@index([status, sortOrder])
 }

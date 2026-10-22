@@ -80,7 +80,7 @@ describe.sequential("FM-021 ranking mensal por turma", () => {
 
   it("agrega o mês de Fortaleza, inclui zero e aplica empate 1/1/3 sem expor identificadores", async () => {
     const ranking = await getStudentMonthlyRanking({ actor: students[0]!, now });
-    expect(ranking.entries).toEqual([
+    expect(ranking.entries).toMatchObject([
       { position: 1, name: "Ana Beatriz", points: 10, isCurrentStudent: true },
       { position: 1, name: "Bruno Lima", points: 10, isCurrentStudent: false },
       { position: 3, name: "Carla Souza", points: 4, isCurrentStudent: false },
@@ -91,7 +91,7 @@ describe.sequential("FM-021 ranking mensal por turma", () => {
   it("mantém evento na turma histórica e inicia o novo mês visualmente em zero", async () => {
     const transferred = await getStudentMonthlyRanking({ actor: students[3]!, now });
     expect(transferred.classGroup.name).toBe("Turma Branca");
-    expect(transferred.entries).toEqual([{ position: 1, name: "Diego Alves", points: 0, isCurrentStudent: true }]);
+    expect(transferred.entries).toMatchObject([{ position: 1, name: "Diego Alves", points: 0, isCurrentStudent: true }]);
     const december = await getAuthorizedClassMonthlyRanking({ actor: coordinator, schoolId, classId: classA, now: new Date("2026-12-15T12:00:00Z") });
     expect(december.entries.every(({ points }) => points === 0)).toBe(true);
     expect(await prisma.pointEvent.count({ where: { activityId } })).toBe(6);

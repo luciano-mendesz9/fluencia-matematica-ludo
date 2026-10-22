@@ -36,7 +36,7 @@ for (const width of [320, 390]) {
     const navigation = page.getByRole("navigation", { name: "Navegação principal" });
     await expect(navigation).toBeVisible();
     await expect(navigation.getByRole("link", { name: "Início" })).toHaveAttribute("aria-current", "page");
-    await expect(navigation.getByRole("link", { name: "Atividades" })).toBeVisible();
+    await expect(navigation.getByRole("link", { name: "Jogos" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
 }

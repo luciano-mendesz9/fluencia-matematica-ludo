@@ -1,6 +1,14 @@
+import type { AvatarOptions } from "./avatar";
+
 export const RANKING_TIME_ZONE = "America/Fortaleza";
 
-type RankingStudent = { id: string; name: string };
+type RankingStudent = {
+  id: string;
+  name: string;
+  avatar?: AvatarOptions;
+  rankName?: string;
+  rankIcon?: string;
+};
 type RankingTotal = { studentId: string; points: number };
 
 function zonedParts(date: Date, timeZone: string) {
@@ -49,6 +57,14 @@ export function rankStudents(students: RankingStudent[], totals: RankingTotal[],
   let position = 0;
   return sorted.map((student, index) => {
     if (index === 0 || student.points !== sorted[index - 1]!.points) position = index + 1;
-    return { position, name: student.name, points: student.points, isCurrentStudent: student.id === currentStudentId };
+    return {
+      position,
+      name: student.name,
+      points: student.points,
+      isCurrentStudent: student.id === currentStudentId,
+      ...(student.avatar ? { avatar: student.avatar } : {}),
+      ...(student.rankName ? { rankName: student.rankName } : {}),
+      ...(student.rankIcon ? { rankIcon: student.rankIcon } : {}),
+    };
   });
 }

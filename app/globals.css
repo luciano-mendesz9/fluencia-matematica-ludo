@@ -643,6 +643,186 @@ body:has(.student-game-page) {
   .game-answer-option { min-height: 42px; padding: 0.55rem; }
 }
 
+.student-dashboard,
+.student-shell main > .space-y-7 {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1050px;
+}
+
+.student-hero {
+  position: relative;
+  display: grid;
+  min-height: 320px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+  align-items: center;
+  overflow: hidden;
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(129, 230, 245, 0.38), transparent 25%),
+    linear-gradient(135deg, #1559c0, #1769e0 46%, #3a83ea);
+  color: #fff;
+  padding: clamp(1.5rem, 5vw, 3.25rem);
+  box-shadow: 0 20px 50px rgba(23, 105, 224, 0.2);
+}
+
+.student-hero::before,
+.student-page-header::before {
+  position: absolute;
+  right: -3rem;
+  top: -4rem;
+  width: 14rem;
+  height: 14rem;
+  border: 2rem solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  content: "";
+}
+
+.student-hero-copy { position: relative; z-index: 2; }
+.student-eyebrow { font-size: 0.75rem; font-weight: 1000; letter-spacing: 0.12em; text-transform: uppercase; }
+.student-hero-copy > h2 { margin-top: 0.35rem; font-size: clamp(2.15rem, 6vw, 3.45rem); font-weight: 1000; line-height: 1; }
+.student-hero-copy > p:not(.student-eyebrow) { margin-top: 0.75rem; color: #e9f2ff; font-weight: 800; }
+.student-hero-avatar { position: relative; z-index: 1; align-self: end; justify-self: end; width: min(100%, 300px); aspect-ratio: 1; }
+.student-hero-orb { position: absolute; inset: 13% 4% 2%; border-radius: 50%; background: rgba(255, 255, 255, 0.15); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
+.student-xp-bubble { position: absolute; z-index: 12; right: 0; bottom: 15%; border-radius: 0.8rem; background: #fff; color: var(--brand); padding: 0.42rem 0.65rem; font-size: 0.78rem; font-weight: 1000; box-shadow: 0 10px 24px rgba(3, 39, 93, 0.2); }
+
+.student-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid #e2e9f3; border-radius: 1.5rem; background: #fff; box-shadow: 0 10px 30px rgba(25, 61, 116, 0.08); }
+.student-stat-grid > div { display: grid; min-width: 0; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 0.75rem; padding: 1rem; }
+.student-stat-grid > div + div { border-left: 1px solid #e8edf5; }
+.student-stat-grid span { grid-row: 1 / 3; display: grid; width: 2.65rem; height: 2.65rem; place-items: center; border-radius: 0.9rem; background: #edf5ff; font-size: 1.25rem; }
+.student-stat-grid strong { min-width: 0; font-size: clamp(1.05rem, 4vw, 1.45rem); font-weight: 1000; line-height: 1.1; }
+.student-stat-grid small { color: var(--muted); font-size: 0.75rem; font-weight: 800; }
+
+.student-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+.student-section-heading h2 { font-size: clamp(1.35rem, 4vw, 1.75rem); font-weight: 1000; line-height: 1.05; }
+.student-section-heading p { margin-top: 0.35rem; color: var(--muted); font-size: 0.78rem; font-weight: 800; }
+.student-section-heading > div > p:first-child:not(:last-child) { color: var(--brand); font-size: 0.7rem; font-weight: 1000; letter-spacing: 0.12em; text-transform: uppercase; }
+.student-section-heading a { min-height: 44px; flex: 0 0 auto; display: inline-flex; align-items: center; color: var(--brand); font-size: 0.78rem; font-weight: 1000; }
+.student-status-pill { border-radius: 999px; background: #eef1f5; color: #667085; padding: 0.38rem 0.7rem; font-size: 0.7rem; font-weight: 1000; text-transform: uppercase; }
+.student-status-pill.is-open { background: #e7f8ef; color: #147a4c; }
+
+.mission-card { display: grid; min-height: 250px; grid-template-columns: minmax(0, 1fr) minmax(150px, 0.55fr); align-items: center; overflow: hidden; border-radius: 1.75rem; padding: clamp(1.25rem, 4vw, 2.25rem); }
+.mission-card.is-locked { border: 1px solid #dbe4f0; background: linear-gradient(135deg, #f7f9fc, #edf2f8); }
+.mission-card.is-unlocked { background: linear-gradient(135deg, #eaf3ff, #d8eaff); }
+.mission-kicker { display: inline-flex; border-radius: 999px; background: rgba(255,255,255,.8); color: #49617e; padding: 0.4rem 0.7rem; font-size: 0.7rem; font-weight: 1000; text-transform: uppercase; }
+.mission-card h3 { margin-top: 0.8rem; font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 1000; line-height: 1; }
+.mission-card h3 + p { margin-top: 0.7rem; max-width: 34rem; color: var(--muted); font-weight: 750; }
+.mission-art { display: grid; width: 100%; aspect-ratio: 1; place-items: center; justify-self: end; border-radius: 50%; background: rgba(255,255,255,.65); filter: saturate(.9); }
+.mission-art span { font-size: clamp(4rem, 12vw, 7rem); filter: drop-shadow(0 14px 11px rgba(33,59,97,.12)); }
+.student-locked-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 0.45rem; border-radius: 0.9rem; background: #e6ebf2; color: #667085; padding: 0.65rem 1rem; font-size: 0.8rem; font-weight: 1000; }
+
+.game-showcase-grid, .game-list-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.student-game-card { position: relative; min-width: 0; border: 1px solid #e2e9f3; border-radius: 1.5rem; background: #fff; padding: 1rem; box-shadow: 0 6px 22px rgba(25,61,116,.06); }
+.student-game-icon { display: grid; width: 5rem; height: 4.5rem; place-items: center; border-radius: 1.2rem; background: #edf5ff; font-size: 2.75rem; }
+.student-card-lock { position: absolute; right: 1rem; top: 1rem; display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: #f0f4f8; color: #68758a; font-size: 0.8rem; font-weight: 1000; }
+.student-game-card h3 { margin-top: 0.9rem; font-size: 1.25rem; font-weight: 1000; line-height: 1.05; }
+.student-game-card p { margin-top: 0.4rem; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.student-game-card > a, .student-game-card > span:last-child { display: inline-flex; min-height: 44px; align-items: center; margin-top: 0.75rem; color: var(--brand); font-size: 0.78rem; font-weight: 1000; }
+
+.student-panel { border: 1px solid #e2e9f3; border-radius: 1.65rem; background: #fff; padding: clamp(1.15rem, 4vw, 1.6rem); box-shadow: 0 7px 25px rgba(25,61,116,.06); }
+.student-panel-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.student-panel-title p { color: var(--brand); font-size: 0.68rem; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; }
+.student-panel-title h2 { margin-top: .2rem; font-size: 1.45rem; font-weight: 1000; line-height: 1.05; }
+.student-panel-title > span { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border-radius: .9rem; background: #edf5ff; font-size: 1.5rem; }
+.week-chart { display: grid; height: 116px; grid-template-columns: repeat(7, 1fr); align-items: end; gap: .65rem; }
+.week-chart > div { display: grid; height: 100%; grid-template-rows: 1fr auto; align-items: end; gap: .45rem; text-align: center; }
+.week-chart span { display: block; min-height: .5rem; border-radius: 999px 999px .35rem .35rem; background: #e2e9f3; }
+.week-chart span.has-xp { background: linear-gradient(#58a1f2, #1769e0); }
+.week-chart small { color: var(--muted); font-size: .68rem; font-weight: 1000; }
+.achievement-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-top: 1.25rem; text-align: center; }
+.achievement-preview > div { min-width: 0; }
+.achievement-preview span { display: grid; width: 4rem; height: 4rem; margin: auto; place-items: center; border-radius: 1.2rem; background: #edf5ff; font-size: 2.25rem; }
+.achievement-preview strong { display: block; margin-top: .55rem; font-size: .7rem; line-height: 1.2; }
+.student-soft-button { display: inline-flex; min-height: 44px; width: 100%; align-items: center; justify-content: center; border-radius: .9rem; background: #edf5ff; color: var(--brand); padding: .65rem 1rem; font-size: .78rem; font-weight: 1000; }
+.ranking-preview-row { display: flex; min-width: 0; align-items: center; gap: .75rem; border-radius: 1rem; background: #f7f9fc; padding: .75rem; }
+.ranking-preview-row.is-current { background: #eaf3ff; box-shadow: inset 0 0 0 1px #b9d5fb; }
+.ranking-preview-row span { color: var(--muted); font-size: .68rem; font-weight: 750; }
+
+.student-page-header { position: relative; overflow: hidden; border-radius: 1.8rem; background: linear-gradient(135deg, #1559c0, #2d7eea); color: #fff; padding: clamp(1.5rem, 5vw, 2.7rem); box-shadow: 0 15px 36px rgba(23,105,224,.16); }
+.student-page-header > * { position: relative; z-index: 1; }
+.student-page-header > p { color: #d8e9ff; font-size: .72rem; font-weight: 1000; letter-spacing: .14em; text-transform: uppercase; }
+.student-page-header h1 { margin-top: .45rem; font-size: clamp(2rem, 6vw, 2.8rem); font-weight: 1000; line-height: 1; }
+.student-page-header > span { display: block; margin-top: .7rem; color: #edf5ff; font-weight: 750; }
+.student-info-banner { display: flex; align-items: flex-start; gap: .85rem; border-radius: 1.25rem; background: #eaf3ff; color: #274b75; padding: 1rem; }
+.student-info-banner > span:first-child { display: grid; width: 2.6rem; height: 2.6rem; flex: 0 0 auto; place-items: center; border-radius: .85rem; background: #fff; }
+.student-info-banner h2 { font-size: .9rem; font-weight: 1000; }
+.student-info-banner p { margin-top: .2rem; font-size: .78rem; font-weight: 700; }
+.game-list-grid { align-items: stretch; }
+.student-game-list-card { display: grid; min-width: 0; grid-template-columns: 7rem minmax(0, 1fr); align-items: center; gap: 1rem; border: 1px solid #e2e9f3; border-radius: 1.5rem; background: #fff; padding: 1rem; box-shadow: 0 6px 20px rgba(25,61,116,.05); }
+.student-game-list-card.is-open { border-color: #b9d5fb; background: #fbfdff; }
+.student-game-list-icon { display: grid; width: 7rem; height: 7rem; place-items: center; border-radius: 1.25rem; background: #edf5ff; font-size: 3.5rem; }
+.student-game-list-card h3 { margin-top: .2rem; font-size: 1.25rem; font-weight: 1000; }
+.student-game-list-card p { margin-top: .25rem; color: var(--muted); font-size: .75rem; font-weight: 700; }
+.game-state-open, .game-state-locked { font-size: .68rem; font-weight: 1000; text-transform: uppercase; }
+.game-state-open { color: #178a55; }
+.game-state-locked { color: #6e7a8c; }
+.student-list-title { margin-bottom: .9rem; font-size: 1.55rem; font-weight: 1000; }
+.achievements-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1rem; }
+.achievement-card { min-width: 0; border: 1px solid #e2e9f3; border-radius: 1.4rem; background: #fff; padding: 1rem; text-align: center; box-shadow: 0 5px 18px rgba(25,61,116,.05); }
+.achievement-card > span { display: grid; width: 5rem; height: 5rem; margin: auto; place-items: center; border-radius: 1.3rem; background: #edf5ff; font-size: 2.75rem; }
+.achievement-card.is-locked > span { filter: grayscale(1); opacity: .58; }
+.achievement-card h3 { margin-top: .8rem; font-size: 1.05rem; font-weight: 1000; line-height: 1.05; }
+.achievement-card p { margin-top: .4rem; color: var(--muted); font-size: .72rem; font-weight: 700; }
+.achievement-card strong { display: block; margin-top: .7rem; color: #178a55; font-size: .67rem; text-transform: uppercase; }
+.achievement-card.is-locked strong { color: #7d8796; }
+
+.profile-avatar-stage { position: relative; width: min(100%, 220px); aspect-ratio: 1; margin: auto; border-radius: 50%; background: #eaf3ff; }
+.avatar-preview-panel { display: grid; align-content: center; border-radius: 1.3rem; background: #f4f8fd; padding: 1rem; }
+.avatar-choice-group { min-inline-size: 0; }
+.avatar-choice-group legend { margin-bottom: .6rem; font-size: .78rem; font-weight: 1000; }
+.avatar-choice { position: relative; display: inline-flex; min-height: 44px; cursor: pointer; align-items: center; justify-content: center; border: 2px solid #dbe4f0; border-radius: 999px; background: #fff; padding: .55rem .8rem; font-size: .75rem; font-weight: 900; }
+.avatar-choice:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.avatar-choice.is-selected { border-color: var(--brand); background: #eaf3ff; color: var(--brand); }
+.avatar-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.avatar-swatch { display: block; width: 1.6rem; height: 1.6rem; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #cad5e3; }
+.avatar-choice.is-selected .avatar-swatch { box-shadow: 0 0 0 2px var(--brand); }
+.student-link-list { overflow: hidden; border: 1px solid #e2e9f3; border-radius: 1.5rem; background: #fff; }
+.student-link-list a { display: grid; min-height: 60px; grid-template-columns: auto 1fr auto; align-items: center; gap: .85rem; padding: .8rem 1rem; }
+.student-link-list a + a { border-top: 1px solid #e8edf5; }
+
+.podium-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); align-items: end; gap: .75rem; text-align: center; }
+.podium-entry { display: grid; min-width: 0; justify-items: center; }
+.podium-avatar { width: clamp(4.25rem, 14vw, 5.5rem); aspect-ratio: 1; overflow: hidden; border: 4px solid #dbe9fb; border-radius: 50%; background: #edf5ff; }
+.podium-entry strong { width: 100%; overflow: hidden; margin-top: .45rem; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.podium-entry small { color: var(--muted); font-size: .68rem; font-weight: 800; }
+.podium-step { display: grid; width: 100%; height: 5rem; margin-top: .7rem; place-items: start center; border-radius: 1rem 1rem 0 0; background: #dceafe; padding-top: .75rem; color: #37679d; font-size: 1.45rem; }
+.podium-1 .podium-avatar { width: clamp(5rem, 16vw, 6.25rem); border-color: #ffe29a; background: #fff4cf; }
+.podium-1 .podium-step { height: 8.5rem; background: #ffe6a6; color: #9a6f17; }
+.podium-2 .podium-step { height: 6.5rem; }
+.podium-3 .podium-step { background: #e8e1fb; color: #6d56a5; }
+.student-ranking-list { overflow: hidden; border: 1px solid #e2e9f3; border-radius: 1.5rem; background: #fff; }
+.student-ranking-list li { display: grid; min-height: 72px; grid-template-columns: 2.4rem 3.25rem minmax(0,1fr) auto; align-items: center; gap: .75rem; padding: .65rem 1rem; }
+.student-ranking-list li + li { border-top: 1px solid #e8edf5; }
+.student-ranking-list li.is-current { background: #eaf3ff; }
+.ranking-number { text-align: center; font-weight: 1000; }
+.ranking-avatar { display: block; width: 3.25rem; height: 3.25rem; overflow: hidden; border-radius: 50%; background: #edf5ff; }
+.student-ranking-list strong { display: flex; min-width: 0; align-items: center; gap: .5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.student-ranking-list em { border-radius: 999px; background: #cfe3ff; color: var(--brand); padding: .15rem .45rem; font-size: .6rem; font-style: normal; text-transform: uppercase; }
+.student-ranking-list small { display: block; color: var(--muted); font-size: .68rem; font-weight: 750; }
+.student-ranking-list > li > b { color: var(--brand); font-size: .8rem; white-space: nowrap; }
+
+@media (max-width: 767px) {
+  .student-hero { min-height: 350px; grid-template-columns: minmax(0, 1fr) 42%; border-radius: 1.6rem; padding: 1.35rem; }
+  .student-hero-copy > h2 { font-size: 2.1rem; }
+  .student-hero-avatar { align-self: center; width: 165%; transform: translateX(29%); }
+  .student-stat-grid > div { grid-template-columns: 1fr; grid-template-rows: auto auto auto; justify-items: center; gap: .2rem; padding: .8rem .35rem; text-align: center; }
+  .student-stat-grid span { grid-row: auto; width: 2.2rem; height: 2.2rem; font-size: 1rem; }
+  .student-stat-grid strong { font-size: .95rem; }
+  .mission-card { min-height: 230px; grid-template-columns: minmax(0, 1.35fr) minmax(90px, .65fr); padding: 1.1rem; }
+  .mission-card h3 { font-size: 1.65rem; }
+  .mission-art { width: 150%; transform: translateX(25%); }
+  .game-showcase-grid, .game-list-grid { grid-template-columns: 1fr; }
+  .student-game-card { min-height: 225px; }
+  .student-game-list-card { grid-template-columns: 5.5rem minmax(0,1fr); }
+  .student-game-list-icon { width: 5.5rem; height: 5.5rem; font-size: 2.8rem; }
+  .achievements-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .achievement-card { padding: .8rem; }
+  .achievement-card > span { width: 4.25rem; height: 4.25rem; font-size: 2.25rem; }
+  .student-ranking-list li { grid-template-columns: 2rem 2.75rem minmax(0,1fr) auto; gap: .55rem; padding-inline: .65rem; }
+  .ranking-avatar { width: 2.75rem; height: 2.75rem; }
+  .student-ranking-list > li > b { font-size: .7rem; }
+}
+
 :where(a, button, input, select, textarea):focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

@@ -25,6 +25,10 @@ erDiagram
   Challenge ||--o| AnswerAttempt : accepts
   AnswerAttempt ||--o| PointEvent : awards
   GameSession ||--o| PointEvent : victory
+  User ||--o| StudentProfile : customizes
+  User ||--o{ StudentAchievement : earns
+  Achievement ||--o{ StudentAchievement : defines
+  Minigame ||--o{ Activity : unlocks
 ```
 
 ## Identidade e escola
@@ -65,6 +69,18 @@ erDiagram
 - `PointEvent(id,studentId,classId,activityId,gameId,answerId?,type,amount,awardedAt)`; unicidades
   para `ANSWER_AWARD(answerId)` e `VICTORY_BONUS(gameId)`. Ranking agrega por `classId` e mês do
   servidor, não apaga eventos.
+
+## Gamificação do aluno
+
+- `StudentRank(code,name,level,xpRequired,icon,accent,sortOrder)` é catálogo de dez patentes. Bronze
+  é nível 0; Prata é nível 1; as promoções seguintes exigem 50 XP cada. A patente atual é derivada
+  da soma do ledger `PointEvent`, sem saldo duplicado no perfil.
+- `Achievement(code,title,description,metric,threshold,icon,sortOrder,active)` define as oito
+  conquistas; `StudentAchievement(studentId,achievementId,unlockedAt)` registra obtenção uma vez.
+- `StudentProfile(studentId,skinTone,outfitColor,hairStyle,hairColor,revision)` guarda somente opções
+  permitidas e usa revisão otimista para duas abas.
+- `Minigame(slug,name,description,icon,status,sortOrder)` é a vitrine. `Activity.minigameId` determina
+  qual jogo a atividade libera; somente o Ludo está ativo na FM-028.
 
 ## Operação
 

@@ -10,6 +10,8 @@
 | Ludo | BR-011–014 | 05 | FM-016–018,020 | turno/revisão/movimento | FM-016: 23 unitários; FM-017: integração de RNG/retry/concorrência/suspensão + Playwright até desafio |
 | pontos/vitória | BR-015/016 | 05 | FM-019 | unique/transação | PTS-01–05 + ledger |
 | ranking | BR-017 | 06 | FM-021 | turma/mês servidor | RANK-01–04 |
+| gamificação/patentes/conquistas | BR-023–025 | 02,04,07 | FM-028 | ledger, catálogo e unlock idempotente | unidade + PostgreSQL + Playwright |
+| vitrine/avatar do aluno | BR-026/027 | 02,04,07,08 | FM-028 | atividade própria + revisão/auditoria | integração hostil + 390/desktop |
 | analytics/feedback | BR-019/020 | 06 | FM-022 | consulta escopada/contexto | DATA-01–04 + reconciliação |
 | auditoria/operação | BR-022 | 03,11 | FM-023,026 | allowlist/log redigido | SCOPE-06 + inspeção |
 | exportações | BR-021 | 06,07 | FM-024 | mesmos filtros/neutralização | EXPORT-01/02 |

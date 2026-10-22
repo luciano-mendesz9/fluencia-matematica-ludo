@@ -9,7 +9,9 @@ pela PR #13 (`66ea7b8`); a validação pedagógica dos limiares da OD-003 perman
 está **integrada** em `origin/main` pela PR #14 (`5ba1660`). FM-024 está **integrada** em
 `origin/main` pela PR #15 (`2a3a731`). FM-025 está **implementada e verificada tecnicamente** em
 `task/FM-025-cross-browser-accessibility`; validação humana, publicação e integração permanecem
-pendentes. FM-026–027 permanecem **planejadas**.
+pendentes. FM-026–027 permanecem **planejadas**. FM-028 está **em andamento** na branch
+`task/FM-028-student-gamification`, criada sobre `origin/main` para a reformulação funcional da área
+do aluno solicitada em 22/10/2026; ela não altera a dependência operacional FM-026 → FM-027.
 Branch base de integração: `main`, publicada em `origin/main`.
 
 | Ordem | ID | Fase/objetivo | Dependências | Branch | Critério principal |
@@ -41,6 +43,7 @@ Branch base de integração: `main`, publicada em `origin/main`.
 | 25 | [FM-025](FM-025-cross-browser-accessibility.md) | Qualidade: regressão/a11y/engines | 020–024 | `task/FM-025-cross-browser-accessibility` | 3 engines, teclado, 320px |
 | 26 | [FM-026](FM-026-ci-observability-runbooks.md) | Operação: CI/observabilidade/runbooks | 023–025 | `task/FM-026-ci-observability-runbooks` | pipeline e restauração ensaiada |
 | 27 | [FM-027](FM-027-pilot-readiness.md) | Piloto: capacidade/aceites | 026 | `task/FM-027-pilot-readiness` | gates técnicos/pedagógicos/humanos |
+| 28 | [FM-028](FM-028-student-gamification.md) | Aluno: patentes, conquistas, vitrine, sequência e avatar | 019,021,025 | `task/FM-028-student-gamification` | persistência real, liberação por atividade e UI responsiva |
 
 O grafo é acíclico. FM-016 pode avançar em paralelo após FM-001 porque é domínio puro; sua integração
 antes de FM-017 ainda é obrigatória. OD-002/003 podem mudar estado de tarefas conforme [decisões](../14-open-decisions.md).

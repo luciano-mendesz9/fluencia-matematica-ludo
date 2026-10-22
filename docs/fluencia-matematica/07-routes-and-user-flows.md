@@ -15,7 +15,10 @@ sidebar contém módulos; filtros de turma/período são locais e retornam via q
 | `/questoes/[id]` | ownership/SEMED | versionar; revisar em rota SEMED | histórico e acesso negado |
 | `/atividades/nova` | turma atribuída | configurar → prévia → abrir | cobertura 1–6, meta, confirmação |
 | `/atividades/[id]` | ator escopado | fechar, resultados, exportar | rascunho/aberta/fechada/conflito |
-| `/aluno` | próprio aluno | atividade aberta → detalhe/jogo | não iniciou/em curso/meta atingida |
+| `/aluno` | próprio aluno | próxima missão, XP, patente, sequência e destaques | jogo bloqueado/liberado, sem pontos |
+| `/aluno/jogos` | próprio aluno + matrícula | atividade aberta → detalhe/jogo | liberado, aguardando professor, futuro |
+| `/aluno/conquistas` | próprio aluno | consultar álbum persistente | obtida/bloqueada/álbum completo |
+| `/aluno/perfil` | próprio aluno | personalizar avatar → salvar | sucesso, validação, revisão concorrente |
 | `/aluno/atividades/[id]/jogo` | participação própria | lançar, responder, mover, retomar | turno, feedback, reconexão/suspensão |
 | `/aluno/ranking` | matrícula atual | consultar mês atual | zero pontos, empate, privado |
 | `/relatorios` | professor/coordenador/SEMED | filtros → detalhe/PDF/XLSX | dados insuficientes, exportando |

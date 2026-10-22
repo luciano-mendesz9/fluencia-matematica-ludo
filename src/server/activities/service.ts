@@ -82,7 +82,9 @@ export async function createActivity(input: { actor: AuthenticatedPrincipal; cla
       const group = await assignedClass(tx, input.actor, input.classId, input.schoolId);
       const versions = await eligibleVersions(tx, input.actor, group.grade, draft.questionVersionIds);
       if (versions.length !== draft.questionVersionIds.length) throw new AuthorizationError("VALIDATION", "A seleção contém questão indisponível, de outra série ou privada de outro autor.");
-      const activity = await tx.activity.create({ data: { schoolId: group.schoolId, classId: group.id, teacherId: input.actor.id, title: draft.title, instructions: draft.instructions, targetCount: draft.targetCount, questionVersions: { createMany: { data: draft.questionVersionIds.map((questionVersionId) => ({ questionVersionId })) } } }, select: { id: true, revision: true } });
+      const ludo = await tx.minigame.findUnique({ where: { slug: "ludo" }, select: { id: true, status: true } });
+      if (!ludo || ludo.status !== "ACTIVE") throw new AuthorizationError("STATE_CONFLICT", "O Ludo não está disponível no catálogo de minigames.");
+      const activity = await tx.activity.create({ data: { schoolId: group.schoolId, classId: group.id, teacherId: input.actor.id, minigameId: ludo.id, title: draft.title, instructions: draft.instructions, targetCount: draft.targetCount, questionVersions: { createMany: { data: draft.questionVersionIds.map((questionVersionId) => ({ questionVersionId })) } } }, select: { id: true, revision: true } });
       await tx.auditEvent.create({ data: { actorId: input.actor.id, schoolId: group.schoolId, action: "ACTIVITY_CREATED", targetType: "Activity", targetId: activity.id, correlationId: input.correlationId ?? randomUUID(), after: { classId: group.id, targetCount: draft.targetCount, selectedVersions: draft.questionVersionIds.length } } });
       return activity;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -252,13 +254,13 @@ export async function recordAcceptedAnswer(input: { activityId: string; studentI
 
 export async function listStudentActivities(actor: AuthenticatedPrincipal) {
   if (!actor.studentCode || actor.globalRole) throw new AuthorizationError("FORBIDDEN", "Acesso exclusivo do aluno.");
-  return prisma.activityParticipation.findMany({ where: { studentId: actor.id, activity: { status: { in: ["OPEN", "CLOSED"] } } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, pointsBalance: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } } } } }, orderBy: { activity: { openedAt: "desc" } } });
+  return prisma.activityParticipation.findMany({ where: { studentId: actor.id, activity: { status: { in: ["OPEN", "CLOSED"] } } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, pointsBalance: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, teacher: { select: { name: true } }, minigame: { select: { slug: true, name: true, icon: true } }, classGroup: { select: { name: true, grade: true } } } } }, orderBy: { activity: { openedAt: "desc" } } });
 }
 
 export async function getStudentActivity(input: { actor: AuthenticatedPrincipal; activityId: string }) {
   uuid(input.activityId, "Atividade inválida.");
   if (!input.actor.studentCode || input.actor.globalRole) throw new AuthorizationError("FORBIDDEN", "Acesso exclusivo do aluno.");
-  const participation = await prisma.activityParticipation.findUnique({ where: { activityId_studentId: { activityId: input.activityId, studentId: input.actor.id } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, pointsBalance: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, classGroup: { select: { name: true, grade: true } } } } } });
+  const participation = await prisma.activityParticipation.findUnique({ where: { activityId_studentId: { activityId: input.activityId, studentId: input.actor.id } }, select: { id: true, acceptedAnswers: true, correctAnswers: true, incorrectAnswers: true, extraAnswers: true, pointsBalance: true, targetReachedAt: true, activity: { select: { id: true, title: true, instructions: true, targetCount: true, status: true, openedAt: true, closedAt: true, teacher: { select: { name: true } }, minigame: { select: { slug: true, name: true, icon: true } }, classGroup: { select: { name: true, grade: true } } } } } });
   if (!participation) throw new AuthorizationError("NOT_FOUND", "Atividade não encontrada para este aluno.");
   return participation;
 }

@@ -4,12 +4,11 @@ import { AppShell } from "@/src/components/layout/app-shell";
 import { Icon } from "@/src/components/ui/icon";
 import { LogoutForm } from "@/src/features/auth/logout-form";
 import { StartGameButton } from "@/src/features/games/game-panel";
+import { STUDENT_NAVIGATION } from "@/src/features/students/navigation";
 import { AuthorizationError } from "@/src/server/auth/errors";
 import { requireArea } from "@/src/server/auth/guard";
 import { getStudentActivity } from "@/src/server/activities/service";
 import { getActiveGameForActivity } from "@/src/server/games/service";
-
-const navigation = [{ href: "/aluno", label: "Início" }, { href: "/aluno/atividades", label: "Atividades" }, { href: "/aluno/ranking", label: "Ranking" }];
 
 export default async function StudentActivityPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireArea("aluno");
@@ -24,7 +23,7 @@ export default async function StudentActivityPage({ params }: { params: Promise<
   const met = Boolean(item.targetReachedAt);
   const context = `${item.activity.classGroup.name} · ${item.activity.classGroup.grade}º ano`;
 
-  return <AppShell areaLabel="Aluno" currentUserLabel={session.user.name} navigation={navigation} accountAction={<LogoutForm />} statusLabel={context}>
+  return <AppShell areaLabel="Aluno" currentUserLabel={session.user.name} navigation={[...STUDENT_NAVIGATION]} accountAction={<LogoutForm />} statusLabel={context}>
     <div className="space-y-6">
       <header><Link href="/aluno/atividades" className="inline-flex min-h-11 items-center gap-2 font-extrabold text-brand"><Icon name="arrow-left" />Voltar às atividades</Link><div className="mt-3 flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-black uppercase text-brand">{context}</p><h1 className="mt-1 text-2xl font-black sm:text-3xl">{item.activity.title}</h1><p className="mt-2 text-muted">Meta de {item.activity.targetCount} desafios aceitos</p></div><span className={`rounded-full px-3 py-2 text-sm font-black ${item.activity.status === "CLOSED" ? "bg-slate-100 text-slate-700" : met ? "bg-emerald-50 text-emerald-800" : "bg-blue-50 text-brand"}`}>{item.activity.status === "CLOSED" ? "Encerrada" : met ? "Meta cumprida" : item.acceptedAnswers ? "Em andamento" : "Nova"}</span></div></header>
 
